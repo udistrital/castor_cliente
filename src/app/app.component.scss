@@ -1,62 +1,28 @@
 :host ::ng-deep {
-    ng2-st-actions, ng2-st-tbody-edit-delete, ng2-st-tbody-create-cancel {
-        display: flex;
-        justify-content: space-evenly;
-        a {
-            color: var(--primary);
-        }
+    .mat-mdc-table {
+        width: 100%;
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 
-    ng2-st-tbody-custom {
-        display: flex;
-        justify-content: space-around;
-
-        a {
-            color: var(--primary);
-        }
+    .mat-mdc-row:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02);
     }
 
-    .page-item.disabled .page-link {
-        color: darkgray !important;
+    .mat-mdc-header-row {
+        background: var(--color3, #e0e7ff);
+        color: var(--primary, #0033a0);
+        font-weight: 600;
     }
 
-    .page-item.active .page-link {
-        background: var(--primary) !important;
-        color: white !important;
-        border: 1px solid var(--primary) !important;
+    .mat-mdc-icon-button {
+        color: var(--primary, #0033a0);
     }
 
-    .page-item {
-        margin: 3px;
-    }
-
-    .page-link {
-        color: var(--primary) !important;
-        padding: 8px;
-        padding-left: 14px;
-        padding-right: 14px;
-        border-radius: 4px !important;
-    }
-
-    .page-link:hover {
-        background-color: var(--color3) !important;
-        color: white !important;
-        border: 1px solid var(--color3);
-    }
-
-    .ng2-smart-pagination .page-link-next,
-    .ng2-smart-pagination .page-link-prev {
-        font-size: 14px !important;
-    }
-    
-    .ng2-smart-page-item a:hover {
-        text-decoration: none !important;
-    }
-
-    .ng2-smart-filters {
-        input.form-control {
-            text-align: center;
-            color: black !important;
-        }
+    .mat-mdc-paginator {
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-top: none;
+        border-radius: 0 0 4px 4px;
     }
 }

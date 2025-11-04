@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+
+.app-data-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+
+  mat-form-field {
+    width: min(320px, 100%);
+  }
+}
+
+.table-wrapper {
+  overflow: auto;
+}
+
+table {
+  min-width: 720px;
+}
+
+.action-cell {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}

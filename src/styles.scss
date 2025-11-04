@@ -1,51 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
 @import url("https://pruebasassets.portaloas.udistrital.edu.co/gaia-style.css");
 @import url("https://pruebasassets.portaloas.udistrital.edu.co/oas.css");
-@import "~@angular/material/theming";
-// @import '~ngx-toastr/toastr';
-
-@include mat-core();
-
-// material customize
-
-$primary: (
-  50: var(--primary),
-  100: var(--primary),
-  200: var(--primary),
-  300: var(--primary),
-  400: var(--primary),
-  500: var(--primary),
-  600: var(--primary),
-  700: var(--primary),
-  800: var(--primary),
-  900: var(--primary),
-  A100: var(--primary),
-  A200: var(--primary),
-  A400: var(--primary),
-  A700: var(--primary),
-  contrast: (
-    50: white,
-    100: white,
-    200: white,
-    300: white,
-    400: white,
-    500: white,
-    600: white,
-    700: white,
-    800: white,
-    900: white,
-    A100: white,
-    A200: white,
-    A400: white,
-    A700: white,
-  ),
-);
-
-$mat-mytheme-primary: mat-palette($primary, 100);
-$mat-mytheme-accent: mat-palette($mat-green, A200, A100, A400);
-
-$mat-mytheme: mat-light-theme($mat-mytheme-primary, $mat-mytheme-accent);
-@include angular-material-theme($mat-mytheme);
 
 b {
   color: var(--primary);

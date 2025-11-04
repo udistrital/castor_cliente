@@ -1,32 +1,33 @@
 .welcome-card {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    padding: 3%;
-    width: fit-content;
+  margin-bottom: 24px;
+  text-align: center;
+  padding: 24px;
 }
 
 .welcome-title {
-    h1 {
-        border-bottom: 1px solid var(--primary);
-        margin-bottom: 1em;
-        font-weight: 300;
-    }
+  h1 {
+    border-bottom: 1px solid var(--primary);
+    margin-bottom: 1em;
+    font-weight: 300;
+  }
 }
 
 .welcome-content {
-    font-size: 24px;
-    text-align: left;
+  font-size: 1.2rem;
+  text-align: left;
 }
 
-@media screen and (max-width: 1024px) {
-    .welcome-card {
-        position: unset;
-        left: 0%;
-        top: 0%;
-        transform: translate(0%, 0%);
-        width: 92%;
-    }
+.dashboard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.selected-pill {
+  align-self: flex-start;
+  background: var(--color3, #eef2ff);
+  color: var(--primary, #0033a0);
+  border-radius: 9999px;
+  padding: 6px 16px;
+  font-weight: 500;
 }

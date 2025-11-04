@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { Router, NavigationEnd } from '@angular/router';
 import { UserService } from './pages/services/userService';
+import { TokenService } from './@core/services/auth/token.service';
+
 declare let gtag: (config: string, code: string, path: any) => void;
 
 @Component({
@@ -14,23 +16,24 @@ export class AppComponent implements OnInit {
   environment = environment;
   loadingRouter: boolean;
   title = 'castor-cliente';
+
   constructor(
     private router: Router,
     private userService: UserService,
+    private tokenService: TokenService,
   ) {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
-        gtag('config', 'G-RBY2GQV40M',
-          {
-            page_path: event.urlAfterRedirects
-          }
-        );
+        gtag('config', 'G-RBY2GQV40M', {
+          page_path: event.urlAfterRedirects,
+        });
       }
-    }
-    );
+    });
   }
 
   ngOnInit(): void {
+    this.tokenService.ensureUser().subscribe();
+
     const oas = document.querySelector('ng-uui-oas');
 
     oas.addEventListener('user', (event: any) => {
@@ -42,7 +45,7 @@ export class AppComponent implements OnInit {
 
     oas.addEventListener('option', (event: any) => {
       if (event.detail) {
-        setTimeout(() => (this.router.navigate([event.detail.Url])), 50);
+        setTimeout(() => this.router.navigate([event.detail.Url]), 50);
       }
     });
 
@@ -51,6 +54,5 @@ export class AppComponent implements OnInit {
         console.log(event.detail);
       }
     });
-
   }
 }

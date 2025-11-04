@@ -2,7 +2,9 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "cli": {
     "analytics": false,
-    "defaultCollection": "@angular-eslint/schematics"
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   },
   "version": 1,
   "newProjectRoot": "projects",
@@ -139,21 +141,21 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "castor-cliente:build"
+            "buildTarget": "castor-cliente:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "castor-cliente:build:production"
+              "buildTarget": "castor-cliente:build:production"
             },
             "development": {
-              "browserTarget": "castor-cliente:build:development"
+              "buildTarget": "castor-cliente:build:development"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "castor-cliente:build"
+            "buildTarget": "castor-cliente:build"
           }
         },
         "lint": {
@@ -168,5 +170,12 @@
       }
     }
   },
-  "defaultProject": "castor-cliente"
+  "schematics": {
+    "@angular-eslint/schematics:application": {
+      "setParserOptionsProject": true
+    },
+    "@angular-eslint/schematics:library": {
+      "setParserOptionsProject": true
+    }
+  }
 }
