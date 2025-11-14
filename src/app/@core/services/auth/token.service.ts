@@ -31,9 +31,14 @@ export class TokenService {
 
   readonly user$ = this.userSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    this.bootstrapFromStorage();
-    this.handleImplicitCallback();
+  constructor(private http: HttpClient) {}
+
+  init(): Promise<void> {
+    return Promise.resolve().then(() => {
+      this.migrateLegacyTokensIfPresent();
+      this.bootstrapFromStorage();
+      this.handleImplicitCallback();
+    });
   }
 
   get accessToken(): string | null {
@@ -52,6 +57,22 @@ export class TokenService {
     return this.userSubject.getValue();
   }
 
+  get documento(): string | null {
+    const u = this.currentUser;
+    return (u?.document) || ((u?.rawTokenPayload as any)?.documento ?? null);
+  }
+
+  get codigo(): string | null {
+    const u = this.currentUser;
+    if (u?.codigo) {
+      return u.codigo;
+    }
+    const fromPayload =
+      (u?.rawTokenPayload as any)?.Codigo ||
+      (u?.rawTokenPayload as any)?.codigo;
+    return fromPayload || null;
+  }
+
   ensureUser(): Observable<AppUser | null> {
     if (!this.isAuthenticated) {
       this.clearSession();
@@ -68,6 +89,33 @@ export class TokenService {
     }
 
     return this.requestUserProfile(payload).pipe(catchError(() => of(this.buildFallbackUser(payload))));
+  }
+
+  needUserWithRoles(): Observable<AppUser | null> {
+    if (!this.isAuthenticated) {
+      this.clearSession();
+      return of(null);
+    }
+
+    const current = this.currentUser;
+    const hasCodigo = Boolean((current?.rawTokenPayload as any)?.Codigo);
+    if (current && hasCodigo) {
+      return of(current);
+    }
+
+    const idt = this.idToken;
+    if (!idt) {
+      return of(null);
+    }
+
+    const payload = this.decodeJwt(idt);
+    if (!payload) {
+      return of(null);
+    }
+
+    return this.requestUserProfile(payload).pipe(
+      catchError(() => of(this.buildFallbackUser(payload)))
+    );
   }
 
   login(): void {
@@ -198,7 +246,7 @@ export class TokenService {
     return this.http
       .post<AutenticacionMidResponse>(TOKEN_CONFIG.AUTENTICACION_MID, body, {
         headers: this.buildAuthHeaders(),
-      })
+      })      
       .pipe(
         map((response) => this.mapUserResponse(email, payload, response)),
         tap((user) => this.cacheUser(user))
@@ -206,15 +254,27 @@ export class TokenService {
   }
 
   private mapUserResponse(email: string, payload: OidcTokenPayload, response: AutenticacionMidResponse): AppUser {
-    const document = response.Codigo || response.documento || payload.documento || '';
+    console.log('Respuesta Autenticación', response);
+    const document =
+      (response as any).documento ||
+      (payload as any).documento ||
+      (response as any).Codigo ||
+      '';
     const roles = this.normalizeRoles(response.role, response.role_code);
     const state = (response.Estado ?? response.state) as string | undefined;
+    const codigo =
+      (response as any)?.Codigo ||
+      (payload as any)?.Codigo ||
+      (payload as any)?.codigo ||
+      document ||
+      '';
 
     return {
       email,
       document,
       roles,
       state,
+      codigo,
       rawTokenPayload: payload,
     };
   }
@@ -256,11 +316,13 @@ export class TokenService {
     const email = payload.email ?? payload.sub ?? 'usuario@udistrital.edu.co';
     const roles = this.normalizeRoles(payload.role as string | string[] | undefined);
     const document = (payload as { documento?: string }).documento ?? '';
+    const codigo = (payload as any)?.Codigo || (payload as any)?.codigo || '';
 
     const user: AppUser = {
       email,
       document,
       roles,
+      codigo,
       rawTokenPayload: payload,
     };
 
@@ -312,4 +374,71 @@ export class TokenService {
   private generateRandomToken(): string {
     return Math.random().toString(36).substring(2) + crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
   }
+
+  /** Lee posibles llaves legadas del widget OAS / cliente antiguo */
+  private readLegacyTokensFromLocalStorage(): {
+    access_token?: string;
+    id_token?: string;
+    token_type?: string;
+    expires_in?: number;
+    state?: string;
+    nonce?: string;
+  } | null {
+    const access_token = localStorage.getItem('access_token') || undefined;
+    const id_token = localStorage.getItem('id_token') || undefined;
+    const token_type = localStorage.getItem('token_type') || undefined;
+    const state = localStorage.getItem('state') || undefined;
+    const nonce = localStorage.getItem('nonce') || undefined;
+
+    const raw_expires_in = localStorage.getItem('expires_in');
+    const expires_in = raw_expires_in ? Number(raw_expires_in) : undefined;
+
+    if (!access_token && !id_token) {
+      return null;
+    }
+    return { access_token, id_token, token_type, expires_in, state, nonce };
+  }
+
+  private migrateLegacyTokensIfPresent(): boolean {
+    const legacy = this.readLegacyTokensFromLocalStorage();
+    if (!legacy) {
+      return false;
+    }
+
+    const accessToken = legacy.access_token!;
+    const idToken = legacy.id_token || '';
+
+    let expiresAt = 0;
+    if (legacy.expires_in && legacy.expires_in > 0) {
+      expiresAt = Date.now() + legacy.expires_in * 1000;
+    } else {
+      const payload = this.decodeJwt(idToken);
+      if (payload && typeof (payload as any).exp === 'number') {
+        expiresAt = (payload as any).exp * 1000;
+      } else {
+        expiresAt = Date.now() + 50 * 60 * 1000;
+      }
+    }
+
+    this.currentTokens = {
+      accessToken,
+      idToken,
+      expiresAt,
+      state: legacy.state,
+    };
+
+    localStorage.setItem(this.tokenStorageKey, JSON.stringify(this.currentTokens));
+
+    try {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('id_token');
+      localStorage.removeItem('token_type');
+      localStorage.removeItem('expires_in');
+    } catch {
+      // noop
+    }
+
+    return true;
+  }
+
 }

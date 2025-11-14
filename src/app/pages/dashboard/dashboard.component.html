@@ -19,5 +19,6 @@
     [rows]="rows"
     (action)="onAction($event)"
     [enableFilter]="true"
+    *ngIf="columns?.length"
   ></app-data-table>
 </section>

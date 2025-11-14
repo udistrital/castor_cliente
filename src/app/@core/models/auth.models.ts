@@ -19,5 +19,6 @@ export interface AppUser {
   document: string;
   roles: string[];
   state?: string;
+  codigo?: string;
   rawTokenPayload?: OidcTokenPayload;
 }

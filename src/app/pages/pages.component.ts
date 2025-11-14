@@ -8,10 +8,9 @@ import { VinculacionTercero } from '../@core/models/vinculacion_tercero';
 
 @Component({
   selector: 'app-pages',
-  template: `<div *ngIf="loaded" class="main-container">
-              <div class="username-info">Bienvenido <br>{{terceroName}}</div>
-              <router-outlet></router-outlet>
-            </div>`,
+  template: `
+    <router-outlet></router-outlet>
+  `,
 })
 export class PagesComponent implements OnInit {
   loaded = false;
