@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { DashboardComponent } from './dashboard/dashboard.component';
 import { PagesComponent } from './pages.component';
 import { NavGuard } from '../@core/components/guard/nav.guard';
 import { RoleGuard } from '../@core/components/guard/role.guard';
@@ -10,8 +9,29 @@ const routes: Routes = [{
   component: PagesComponent,
   children: [
     {
+      path: 'check',
+      loadComponent: () => import('./check/check.component').then(m => m.CheckComponent),
+    },
+    {
+      path: 'home',
+      loadComponent: () => import('./estudiante/home-estudiante.component').then(m => m.HomeEstudianteComponent),
+    },
+    {
+      path: 'registro',
+      loadComponent: () => import('./estudiante/registro-estudiante.component').then(m => m.RegistroEstudianteComponent),
+    },
+    {
       path: 'dashboard',
-      component: DashboardComponent,
+      children: [
+        {
+          path: '',
+          loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+        },
+        {
+          path: 'tutor',
+          loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+        },
+      ],
     },
 /* Ejemplo ruta con guards
     {
@@ -22,7 +42,7 @@ const routes: Routes = [{
     },
 */
     {
-      path: '', redirectTo: 'dashboard', pathMatch: 'full',
+      path: '', pathMatch: 'full', redirectTo: 'check',
     },
   ]
 }];

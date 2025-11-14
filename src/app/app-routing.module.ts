@@ -7,7 +7,7 @@ const routes: Routes = [
     loadChildren: () => import('./pages/pages.module')
       .then(m => m.PagesModule),
   },
-  { path: '**', redirectTo: 'pages/dashboard', pathMatch: 'full' }
+  { path: '**', redirectTo: 'pages/check', pathMatch: 'full' }
 ];
 
 @NgModule({

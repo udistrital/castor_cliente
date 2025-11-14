@@ -1,5 +1,11 @@
-<ng-uui-oas [environment]="environment"></ng-uui-oas>
-<div *ngIf="loadRouting">
-    <router-outlet></router-outlet>
-</div>
+<ng-container *ngIf="!tokenService.isAuthenticated; else appShell">
+  <ng-uui-oas id="oas-widget" [environment]="environment"></ng-uui-oas>
+</ng-container>
 
+<ng-template #appShell>
+  <div *ngIf="loadRouting || tokenService.isAuthenticated">
+    <router-outlet></router-outlet>
+  </div>
+</ng-template>
+
+<app-global-loading-overlay></app-global-loading-overlay>

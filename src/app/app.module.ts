@@ -1,29 +1,32 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
+import { APP_INITIALIZER, CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
-import { CommonModule } from '@angular/common';
+import { CommonModule, HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 
 import { AppComponent } from './app.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { ApiBaseInterceptor } from './@core/interceptors/api-base.interceptor';
+import { LoaderInterceptor } from './@core/services/http/loader.interceptor';
+import { JwtInterceptor } from './@core/interceptors/jwt.interceptor';
+import { TokenService } from './@core/services/auth/token.service';
+import { GlobalLoadingOverlayComponent } from './@shared/components/global-loading-overlay.component';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-  ],
-  imports: [
-    CommonModule,
-    BrowserModule,
-    AppRoutingModule,
-    HttpClientModule,
-    BrowserAnimationsModule,
-    ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })
-  ],
-  providers: [{ provide: LocationStrategy, useClass: HashLocationStrategy }  ],
-  schemas: [ CUSTOM_ELEMENTS_SCHEMA ],
-  bootstrap: [AppComponent],
-})
+
+
+@NgModule({ declarations: [
+        AppComponent,
+    ],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    bootstrap: [AppComponent], imports: [CommonModule,
+        BrowserModule,
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        GlobalLoadingOverlayComponent,
+        ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })], providers: [{ provide: LocationStrategy, useClass: HashLocationStrategy }, provideHttpClient(withInterceptorsFromDi()), { provide: APP_INITIALIZER, useFactory: (token: TokenService) => () => token.init(), deps: [TokenService], multi: true }, { provide: HTTP_INTERCEPTORS, useClass: ApiBaseInterceptor, multi: true }, { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true }, { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }] })
 export class AppModule { }
+
+
+
