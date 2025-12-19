@@ -4,9 +4,10 @@ export interface PerfilEstudiante {
   proyecto_curricular_id: number;
   proyecto_curricular_nombre?: string;
   resumen?: string;
-  habilidades?: string;
-  cv_documento_id?: string | null;
+  habilidades?: string | string[];
+  cv_documento_id?: string;
   visible: boolean;
+  tratamiento_datos_aceptado?: boolean;
   fecha_creacion?: string;
   fecha_modificacion?: string;
 }

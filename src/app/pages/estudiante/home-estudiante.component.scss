@@ -1,0 +1,142 @@
+.home-shell {
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 20%, #f7fbff 0, #eef3ff 35%, #f8f9fb 100%);
+  padding: 40px 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.home-card {
+  width: 100%;
+  max-width: 1100px;
+  box-shadow: 0 18px 60px rgba(15, 33, 69, 0.1);
+  border-radius: 20px;
+}
+
+.avatar {
+  background: linear-gradient(135deg, #0b3c7a, #1565c0);
+  color: #fff;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.section {
+  margin-top: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f2145;
+  }
+  &.sub h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #203354;
+  }
+}
+
+.datos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.info-card {
+  background: #f8faff;
+  border: 1px solid #e3ebff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  .label {
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #5b6b85;
+    margin-bottom: 6px;
+  }
+  .value {
+    font-weight: 700;
+    color: #10213f;
+  }
+  .muted {
+    color: #7a8699;
+    margin-left: 6px;
+    font-size: 12px;
+  }
+}
+
+.resumen {
+  background: #f5f8ff;
+  border: 1px solid #e0e8ff;
+  border-radius: 12px;
+  padding: 14px;
+  line-height: 1.5;
+  color: #1f2d42;
+}
+
+.muted {
+  color: #7a8699;
+  margin: 0;
+}
+
+.habilidades {
+  margin-top: 18px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  mat-chip {
+    background: #e6f0ff;
+    color: #0b3c7a;
+    font-weight: 600;
+  }
+}
+
+.steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  li {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #e5ecf5;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 33, 69, 0.06);
+    color: #1f2d42;
+    mat-icon {
+      color: #1565c0;
+    }
+  }
+}
+
+.link {
+  color: #1565c0;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .home-shell {
+    padding: 20px 12px;
+  }
+  .home-card {
+    border-radius: 14px;
+  }
+}

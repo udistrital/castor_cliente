@@ -234,3 +234,26 @@ a {
     display: none;
   }
 }
+
+/* Snackbar look */
+.snackbar-base {
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.snackbar-base .mat-mdc-snack-bar-action {
+  color: #fff;
+}
+
+.snackbar-success {
+  background: #2e7d32;
+}
+
+.snackbar-info {
+  background: #1565c0;
+}
+
+.snackbar-error {
+  background: #c62828;
+}

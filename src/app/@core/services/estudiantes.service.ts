@@ -50,4 +50,14 @@ export class EstudiantesService {
         tap((resp) => console.log('[ESTUDIANTES] actualizarPerfil(%s) →', id, resp))
       );
   }
+
+  /**
+   * Consulta el perfil asociado a un tercero en Castor MID.
+   * GET /v1/estudiantes/perfil?tercero_id=<id>
+   */
+  getMiPerfil(tercero_id: number): Observable<PerfilEstudiante | null> {
+    return this.requestManager
+      .get<ApiEnvelope<PerfilEstudiante>>('castor_mid', 'estudiantes/perfil', { tercero_id })
+      .pipe(map((res) => res?.Data ?? null));
+  }
 }

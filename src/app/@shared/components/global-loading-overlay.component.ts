@@ -19,12 +19,12 @@ import { LoadingService } from 'src/app/@core/services/ui/loading.service';
   `,
   styles: [`
     .overlay { position: fixed; inset:0; display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,.55); backdrop-filter: blur(2px); z-index: 99999; }
-    .box { display:flex; gap:16px; align-items:center; background:#fff; padding:20px 24px;
-      border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
-    .logo { width:48px; height:48px; object-fit:contain; }
-    .title { font-weight:700; font-size:16px; margin-bottom:2px; }
-    .msg { opacity:.85; }
+      background: #0f2145e6; backdrop-filter: blur(4px); z-index: 99999; }
+    .box { display:flex; gap:16px; align-items:center; background:#fff; padding:22px 26px;
+      border-radius:18px; box-shadow:0 24px 70px rgba(0,0,0,.45); max-width: 90vw; }
+    .logo { width:56px; height:56px; object-fit:contain; }
+    .title { font-weight:700; font-size:16px; margin-bottom:4px; color:#0f2145; }
+    .msg { opacity:.9; color:#1f2d42; }
   `]
 })
 export class GlobalLoadingOverlayComponent {

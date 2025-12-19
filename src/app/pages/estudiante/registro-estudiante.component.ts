@@ -7,6 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { CatalogosService } from 'src/app/@core/services/catalogos/catalogos.service';
 import { AlertService } from 'src/app/@core/services/ui/alert.service';
 import { LoadingService } from 'src/app/@core/services/ui/loading.service';
@@ -25,6 +26,7 @@ import { DocumentosService } from 'src/app/@core/services/documentos.service';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatCheckboxModule,
     GlobalLoadingOverlayComponent,
   ],
   templateUrl: './registro-estudiante.component.html',
@@ -45,10 +47,11 @@ export class RegistroEstudianteComponent implements OnInit {
   form = this.fb.group({
     resumen: ['', [Validators.required, Validators.minLength(20)]],
     habilidades: ['', [Validators.required]],
+    tratamientoDatosAceptado: [false, [Validators.requiredTrue]],
   });
 
   get valid(): boolean {
-    return this.form.valid && !!this.cvFile;
+    return this.form.valid && !!this.cvFile && this.form.value.tratamientoDatosAceptado === true;
   }
 
   constructor(
@@ -132,6 +135,7 @@ export class RegistroEstudianteComponent implements OnInit {
       habilidades: string | undefined;
       cv_documento_id: string;
       visible: boolean;
+      tratamiento_datos_aceptado?: boolean;
     } = {
       proyecto_curricular_id: Number(this.pcId || 0),
       resumen: this.form.value.resumen?.trim(),
@@ -158,6 +162,9 @@ export class RegistroEstudianteComponent implements OnInit {
       }
 
       this.loading.show('Registrando perfil…');
+      if (this.form.value.tratamientoDatosAceptado === true) {
+        payload.tratamiento_datos_aceptado = true;
+      }
       await firstValueFrom(this.estudiantes.crearPerfil(payload));
       this.loading.hide();
 

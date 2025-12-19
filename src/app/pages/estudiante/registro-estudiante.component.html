@@ -1,7 +1,7 @@
 <app-global-loading-overlay></app-global-loading-overlay>
 
-<div class="registro-wrapper">
-  <mat-card appearance="outlined" class="registro-card">
+<div class="registro-shell">
+  <mat-card class="registro-card" appearance="outlined">
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <mat-card-header>
         <div mat-card-avatar class="registro-avatar">
@@ -13,10 +13,11 @@
         </mat-card-subtitle>
       </mat-card-header>
 
-      <mat-card-content>
-        <!-- Bloque de datos básicos -->
-        <section class="registro-section registro-section--datos">
-          <h3 class="section-title">Datos del estudiante</h3>
+      <mat-card-content class="card-content">
+        <section class="section section-datos">
+          <div class="section-header">
+            <h3>Datos del estudiante</h3>
+          </div>
           <div class="datos-grid">
             <div class="dato">
               <div class="label">Nombre</div>
@@ -41,9 +42,10 @@
           </div>
         </section>
 
-        <!-- Bloque de perfil -->
-        <section class="registro-section">
-          <h3 class="section-title">Perfil profesional</h3>
+        <section class="section">
+          <div class="section-header">
+            <h3>Perfil profesional</h3>
+          </div>
           <mat-form-field appearance="outline" class="wfull">
             <mat-label>Resumen profesional</mat-label>
             <textarea
@@ -77,20 +79,16 @@
           </mat-form-field>
         </section>
 
-        <!-- Bloque de hoja de vida -->
-        <section class="registro-section">
-          <h3 class="section-title">Hoja de vida</h3>
+        <section class="section">
+          <div class="section-header">
+            <h3>Hoja de vida</h3>
+          </div>
           <p class="section-helper">
             Adjunta tu hoja de vida en formato PDF. Tamaño máximo: 8&nbsp;MB.
           </p>
 
           <div class="file-row">
-            <button
-              mat-stroked-button
-              color="primary"
-              type="button"
-              (click)="file.click()"
-            >
+            <button mat-stroked-button color="primary" type="button" (click)="file.click()">
               Seleccionar archivo
             </button>
 
@@ -116,23 +114,43 @@
             {{ cvError }}
           </div>
         </section>
+
+        <section class="section">
+          <div class="section-header">
+            <h3>Tratamiento de datos</h3>
+          </div>
+          <div class="col tratamiento-checkbox">
+            <mat-checkbox formControlName="tratamientoDatosAceptado">
+              <span class="checkbox-title">
+                Aviso de Privacidad y Tratamiento de Datos Personales.
+              </span>
+              <span class="checkbox-text">
+                La Universidad Distrital Francisco José de Caldas, en cumplimiento de la Ley 1581 de 2012 y el Decreto 1377
+                de 2013, le informa que al utilizar nuestros servicios, sus datos personales serán recopilados y tratados
+                con el fin de gestionar su cuenta, prestar el servicio solicitado y enviar comunicaciones relevantes.
+                <br /><br />
+                <strong>Compartir información con terceros:</strong>
+                Sus datos personales podrán ser compartidos con terceros aliados, es decir, empresas oferentes de pasantías
+                u oportunidades similares, proveedores de servicios tecnológicos y/o entidades financieras bajo estándares
+                de seguridad y confidencialidad, cumpliendo la normativa de protección de datos colombiana.
+              </span>
+            </mat-checkbox>
+
+            <mat-error
+              *ngIf="form.controls.tratamientoDatosAceptado.invalid
+                    && form.controls.tratamientoDatosAceptado.touched"
+            >
+              Debes aceptar el aviso de privacidad para registrarte.
+            </mat-error>
+          </div>
+        </section>
       </mat-card-content>
 
       <mat-card-actions align="end" class="registro-actions">
-        <button
-          mat-flat-button
-          color="primary"
-          type="submit"
-          [disabled]="!valid"
-        >
+        <button mat-flat-button color="primary" type="submit" [disabled]="!valid">
           Registrar en Castor
         </button>
-        <button
-          mat-button
-          color="warn"
-          type="button"
-          (click)="onCancel()"
-        >
+        <button mat-stroked-button color="warn" type="button" (click)="onCancel()">
           Cancelar
         </button>
       </mat-card-actions>

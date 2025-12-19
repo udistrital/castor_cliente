@@ -1,0 +1,107 @@
+<app-global-loading-overlay></app-global-loading-overlay>
+
+<div class="home-shell">
+  <mat-card class="home-card">
+    <mat-card-header>
+      <div mat-card-avatar class="avatar">
+        <span>{{ (ctxNombre || ctxCodigo || 'E').slice(0, 1) | uppercase }}</span>
+      </div>
+      <mat-card-title>Bienvenido/a, {{ ctxNombre || ctxCodigo || 'Estudiante' }}</mat-card-title>
+      <mat-card-subtitle>Este es tu panel de estudiante en Castor.</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <section class="section datos">
+        <div class="section-header">
+          <h3>Datos del estudiante</h3>
+        </div>
+        <div class="datos-grid">
+          <div class="info-card">
+            <div class="label">Nombre</div>
+            <div class="value">{{ ctxNombre || '—' }}</div>
+          </div>
+          <div class="info-card">
+            <div class="label">Código</div>
+            <div class="value">{{ ctxCodigo || '—' }}</div>
+          </div>
+          <div class="info-card">
+            <div class="label">Proyecto Curricular</div>
+            <div class="value">
+              <ng-container *ngIf="ctxPcNombre; else pcFallback">
+                {{ ctxPcNombre }}
+              </ng-container>
+              <ng-template #pcFallback>
+                {{ ctxPcId || '—' }}
+                <small class="muted" *ngIf="ctxPcId">(provisional)</small>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h3>Perfil profesional</h3>
+        </div>
+        <p class="resumen" *ngIf="perfil?.resumen; else resumenVacio">
+          {{ perfil?.resumen }}
+        </p>
+        <ng-template #resumenVacio>
+          <p class="muted">Aún no registras un resumen profesional.</p>
+        </ng-template>
+
+        <div class="habilidades">
+          <div class="section-header sub">
+            <h4>Habilidades</h4>
+          </div>
+          <ng-container *ngIf="habilidadesList.length; else habilidadesVacias">
+  <div class="chip-row">
+    <mat-chip *ngFor="let hab of habilidadesList">
+      {{ hab }}
+    </mat-chip>
+  </div>
+</ng-container>
+
+
+          <ng-template #habilidadesVacias>
+            <p class="muted">Aún no registras habilidades.</p>
+          </ng-template>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h3>Siguientes pasos</h3>
+        </div>
+        <ul class="steps">
+          <li>
+            <mat-icon>search</mat-icon>
+            Buscar ofertas de pasantía disponibles
+          </li>
+          <li>
+            <mat-icon>send</mat-icon>
+            Postularte a una oferta
+          </li>
+          <li>
+            <mat-icon>description</mat-icon>
+            Actualizar tu hoja de vida
+          </li>
+        </ul>
+      </section>
+
+      <section class="section" *ngIf="perfil?.cv_documento_id">
+        <div class="section-header sub">
+          <h4>Hoja de vida</h4>
+        </div>
+        <a
+          class="link"
+          [href]="buildCvLink(perfil?.cv_documento_id || '')"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Ver PDF adjunto
+        </a>
+      </section>
+    </mat-card-content>
+  </mat-card>
+</div>

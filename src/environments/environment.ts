@@ -15,7 +15,7 @@ export const environment = {
   POLUX_MID_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/polux_mid/v1/',
   SESIONES_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/sesiones_crud/v2/',
   GESTOR_DOCUMENTAL_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1/',
-  CASTOR_CV_TIPO_DOCUMENTO_ID: 0, // TODO: definir tipo de documento definitivo
+  CASTOR_CV_TIPO_DOCUMENTO_ID: 0, // definir tipo de documento definitivo
   OIKOS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/oikos_crud_api/v1/',
   CASTOR_MID_SERVICE: 'http://localhost:8080/v1',
   PARAMETROS_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/parametros/v1/',

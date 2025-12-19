@@ -3,110 +3,35 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import Swal from 'sweetalert2';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatChipsModule } from '@angular/material/chips';
+import { GlobalLoadingOverlayComponent } from '../../@shared/components/global-loading-overlay.component';
 import { TokenService } from '../../@core/services/auth/token.service';
 import { LoadingService } from '../../@core/services/ui/loading.service';
 import { EstudiantesService } from '../../@core/services/estudiantes.service';
 import { CatalogosService } from '../../@core/services/catalogos/catalogos.service';
 import { UserContextService } from '../../@core/services/user-context.service';
 import { PerfilEstudiante } from '../../@core/models/perfil.model';
+import { AcademicService } from 'src/app/@core/services/academica/academic.service';
+import { take } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
 
 @Component({
   standalone: true,
   selector: 'app-home-estudiante',
-  imports: [CommonModule, RouterModule],
-  template: `
-    <div class="home-estudiante max-w-3xl mx-auto p-6">
-      <h2 class="text-2xl font-semibold mb-4">Mi perfil en Castor</h2>
-
-      <div class="ctx-card p-4 border rounded mb-6">
-        <div class="ctx-grid">
-          <div class="col">
-            <span class="label">Nombre</span>
-            <div class="ro">{{ ctxNombre || '—' }}</div>
-          </div>
-          <div class="col">
-            <span class="label">Código</span>
-            <div class="ro">{{ ctxCodigo || '—' }}</div>
-          </div>
-          <div class="col">
-            <span class="label">Proyecto Curricular</span>
-            <div class="ro">
-              <ng-container *ngIf="ctxPcNombre; else ctxPcFallback">
-                {{ ctxPcNombre }}
-              </ng-container>
-              <ng-template #ctxPcFallback>
-                {{ ctxPcId || '—' }}
-                <small class="muted" *ngIf="ctxPcId">(provisional)</small>
-              </ng-template>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <ng-container *ngIf="perfil; else noPerfil">
-        <div class="card p-4 border rounded mb-4">
-          <h3 class="text-xl font-medium mb-2">
-            {{ pcNombre || 'Proyecto curricular sin especificar' }}
-          </h3>
-          <p class="text-sm text-gray-600 mb-4">
-            Código: {{ codigoEstudiante || 'N/A' }}
-          </p>
-          <div class="mb-4">
-            <h4 class="font-semibold mb-1">Resumen</h4>
-            <p>{{ perfil?.resumen || 'Aún no registras un resumen.' }}</p>
-          </div>
-          <div class="mb-4">
-            <h4 class="font-semibold mb-1">Habilidades</h4>
-            <p>{{ perfil?.habilidades || 'Aún no registras habilidades.' }}</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <span
-              class="px-3 py-1 rounded text-sm"
-              [class.bg-green-100]="perfil?.visible"
-              [class.bg-gray-200]="!perfil?.visible"
-            >
-              {{ perfil?.visible ? 'Visible para empleadores' : 'No visible' }}
-            </span>
-            <a
-              *ngIf="perfil?.cv_documento_id"
-              [href]="buildCvLink(perfil.cv_documento_id)"
-              target="_blank"
-              class="text-blue-600 text-sm underline"
-            >
-              Ver hoja de vida
-            </a>
-          </div>
-        </div>
-      </ng-container>
-
-      <ng-template #noPerfil>
-        <div class="p-4 border rounded bg-yellow-50">
-          No encontramos un perfil registrado. Completa tu registro desde la sección
-          <a routerLink="/pages/registro" class="text-blue-600 underline">Registro</a>.
-        </div>
-      </ng-template>
-    </div>
-  `,
-  styles: [
-    `
-    .ctx-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-    }
-    .label { font-size: 12px; opacity: .7; margin-bottom: 4px; display:block; }
-    .ro {
-      background: #f7f7fb;
-      border: 1px solid #e3e3ef;
-      border-radius: 8px;
-      padding: 10px 12px;
-      min-height: 40px;
-      display:flex;
-      align-items:center;
-    }
-    .muted { opacity: .6; font-size: 12px; margin-left: 4px; }
-    `,
+  imports: [
+    CommonModule,
+    RouterModule,
+    MatCardModule,
+    MatIconModule,
+    MatChipsModule,
+    GlobalLoadingOverlayComponent,
   ],
+  templateUrl: './home-estudiante.component.html',
+  styleUrls: ['./home-estudiante.component.scss'],
 })
 export class HomeEstudianteComponent implements OnInit {
   perfil: PerfilEstudiante | null = null;
@@ -123,6 +48,7 @@ export class HomeEstudianteComponent implements OnInit {
     private estudiantes: EstudiantesService,
     private catalogos: CatalogosService,
     private userContext: UserContextService,
+    private academica: AcademicService,
   ) {}
 
   ngOnInit(): void {
@@ -141,12 +67,21 @@ export class HomeEstudianteComponent implements OnInit {
         currentUser?.tercero_id ??
         null;
 
+      const documento =
+        currentUser?.rawTokenPayload?.documento ??
+        currentUser?.documento ??
+        currentUser?.rawTokenPayload?.document ??
+        currentUser?.document ??
+        this.token.documento ??
+        ctx?.documento ??
+        null;
+
       const codigo =
         currentUser?.rawTokenPayload?.Codigo ??
         currentUser?.Codigo ??
-        currentUser?.document ??
-        currentUser?.documento ??
-        ctx?.codigo;
+        this.token.codigo ??
+        ctx?.codigo ??
+        null;
 
       this.codigoEstudiante = codigo ?? '';
 
@@ -154,8 +89,8 @@ export class HomeEstudianteComponent implements OnInit {
 
       if (terceroId) {
         this.perfil = await firstValueFrom(this.estudiantes.obtenerPerfilPorTercero(terceroId));
-      } else if (codigo) {
-        const resp = await firstValueFrom(this.estudiantes.consultarPorDocumento(codigo));
+      } else if (documento) {
+        const resp = await firstValueFrom(this.estudiantes.consultarPorDocumento(String(documento)));
         this.perfil = resp?.relacionado ? (resp as any).perfil : null;
       }
 
@@ -190,9 +125,33 @@ export class HomeEstudianteComponent implements OnInit {
 
   private bootstrapContext(): void {
     const ctx = this.readJson('castor_estudiante_ctx');
-    this.ctxNombre = ctx?.nombre || this.token.currentUser?.email || '';
+    this.ctxNombre = (ctx?.nombre || '').toString().trim();
     this.ctxCodigo = ctx?.codigo || this.token.codigo || '';
     this.ctxPcId = ctx?.carrera ? String(ctx.carrera) : '';
+
+    // Si el contexto no trae nombre (y tenemos código), lo traemos desde Académica
+    if ((!this.ctxNombre || this.ctxNombre.includes('@')) && this.ctxCodigo) {
+      this.academica
+        .getDatosEstudiantePorCodigo(this.ctxCodigo)
+        .pipe(
+          take(1),
+          catchError(() => of(null)),
+        )
+        .subscribe((data) => {
+          const nombre = data?.Nombre?.trim();
+          if (nombre) {
+            this.ctxNombre = nombre;
+
+            // opcional: persistir para no pedirlo cada vez
+            const currentCtx = this.readJson('castor_estudiante_ctx') || {};
+            localStorage.setItem(
+              'castor_estudiante_ctx',
+              JSON.stringify({ ...currentCtx, nombre }),
+            );
+          }
+        });
+    }
+
 
     if (this.ctxPcId) {
       this.catalogos.getNombreProyectoCurricular(this.ctxPcId).subscribe({
@@ -219,4 +178,19 @@ export class HomeEstudianteComponent implements OnInit {
     }
     return `#cv/${id}`;
   }
+
+  get habilidadesList(): string[] {
+  const h: any = this.perfil?.habilidades;
+
+  if (!h) return [];
+
+  const list = Array.isArray(h)
+    ? h
+    : String(h).split(',');
+
+  return list
+    .map((x) => String(x ?? '').trim())
+    .filter((x) => x.length > 0);
+  }
+
 }
