@@ -44,6 +44,7 @@ export class CheckComponent implements OnInit {
       this.runCheckFlow().catch(err => {
         console.error('[CHECK] runCheckFlow error', err);
         this.loading.hide();
+        sessionStorage.removeItem('castor_check_running');
         this.alert.error('Error', 'No se pudo verificar tu información. Intenta más tarde.');
         this.router.navigateByUrl('/pages/home');
       });
@@ -51,14 +52,24 @@ export class CheckComponent implements OnInit {
   }
 
   private async runCheckFlow(): Promise<void> {
+    const runningKey = 'castor_check_running';
+    if (sessionStorage.getItem(runningKey) === '1') {
+      return;
+    }
+    sessionStorage.setItem(runningKey, '1');
+
     const u = this.token.currentUser!;
     const documento = this.token.documento || '';
     const codigo = this.token.codigo || '';
     const roles = (u.roles || []).map(r => r.toUpperCase());
     console.log('[CHECK] ids →', { documento, codigo, roles });
 
+    const baseCtx = { documento, codigo, nombre: '', carrera: '' };
+    localStorage.setItem('castor_estudiante_ctx', JSON.stringify(baseCtx));
+
     if (roles.includes('TUTOR') || roles.includes('TUTOR_EXTERNO')) {
       this.router.navigateByUrl('/pages/dashboard/tutor');
+      sessionStorage.removeItem(runningKey);
       return;
     }
 
@@ -73,7 +84,28 @@ export class CheckComponent implements OnInit {
 
     if (relacionado) {
       localStorage.setItem('castor_ultimo_check', JSON.stringify({ relacionado:true, tercero_id:terceroId }));
-      this.router.navigateByUrl('/pages/home');
+      if (codigo) {
+        this.loading.show('Preparando tu panel…');
+        try {
+          const aca = await this.academica.getDatosEstudiantePorCodigo(codigo).toPromise();
+          const nombre = (aca as any)?.Nombre || '';
+          const carrera = (aca as any)?.Carrera || '';
+          localStorage.setItem(
+            'castor_estudiante_ctx',
+            JSON.stringify({ documento, codigo, nombre: nombre || '', carrera: carrera || '' })
+          );
+        } catch {
+          localStorage.setItem('castor_estudiante_ctx', JSON.stringify({ documento, codigo, nombre: '', carrera: '' }));
+        } finally {
+          this.loading.hide();
+          this.router.navigateByUrl('/pages/home');
+          sessionStorage.removeItem(runningKey);
+        }
+      } else {
+        localStorage.setItem('castor_estudiante_ctx', JSON.stringify({ documento, codigo, nombre: '', carrera: '' }));
+        this.router.navigateByUrl('/pages/home');
+        sessionStorage.removeItem(runningKey);
+      }
       return;
     }
 
@@ -81,6 +113,7 @@ export class CheckComponent implements OnInit {
     if (!codigo) {
       this.alert.error('Validación incompleta', 'No recibimos tu código académico. Inicia sesión nuevamente.');
       this.router.navigateByUrl('/pages/home');
+      sessionStorage.removeItem(runningKey);
       return;
     }
 
@@ -91,6 +124,7 @@ export class CheckComponent implements OnInit {
     if (!aca || !aca.Nombre || !aca.Carrera) {
       this.alert.error('Datos incompletos', 'No se pudieron obtener tus datos académicos. Contacta la coordinación.');
       this.router.navigateByUrl('/pages/home');
+      sessionStorage.removeItem(runningKey);
       return;
     }
 
@@ -105,7 +139,7 @@ export class CheckComponent implements OnInit {
         `Hola ${aca.Nombre}`,
         'No cumples con los requisitos para aplicar a pasantía. Si tienes dudas, comunícate con la coordinación de tu proyecto curricular.'
       );
-      this.router.navigateByUrl('/pages/home');
+      sessionStorage.removeItem(runningKey);
       return;
     }
 
@@ -116,5 +150,6 @@ export class CheckComponent implements OnInit {
     }));
 
     this.router.navigateByUrl('/pages/registro');
+    sessionStorage.removeItem(runningKey);
   }
 }
