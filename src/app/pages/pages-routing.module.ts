@@ -33,6 +33,57 @@ const routes: Routes = [{
         },
       ],
     },
+    {
+      path: 'tutor',
+      runGuardsAndResolvers: 'always',
+      children: [
+        // ✅ Registro SIN RoleGuard (para que nunca lo bloquee el menú)
+        {
+          path: 'registro',
+          loadComponent: () => import('./tutor/registro/tutor-registro.component').then(m => m.TutorRegistroComponent),
+        },
+
+        // 🔒 El resto con RoleGuard (menú)
+        {
+          path: 'dashboard',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/dashboard/tutor-dashboard.component').then(m => m.TutorDashboardComponent),
+        },
+        {
+          path: 'ofertas',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/ofertas/ofertas-list.component').then(m => m.OfertasListComponent),
+        },
+        {
+          path: 'ofertas/crear',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/ofertas/oferta-create.component').then(m => m.OfertaCreateComponent),
+        },
+        {
+          path: 'ofertas/:id/postulaciones',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/postulaciones/oferta-postulaciones.component').then(m => m.OfertaPostulacionesComponent),
+        },
+        {
+          path: 'invitaciones',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/invitaciones/invitaciones-tutor.component').then(m => m.InvitacionesTutorComponent),
+        },
+        {
+          path: 'explorar-estudiantes',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/explorar/explorar-estudiantes.component').then(m => m.ExplorarEstudiantesComponent),
+        },
+        {
+          path: 'explorar-estudiantes/:perfilId',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/explorar/explorar-detalle.component').then(m => m.ExplorarDetalleComponent),
+        },
+
+        { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ],
+    },
+
 /* Ejemplo ruta con guards
     {
       path: 'plantillas',

@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+//import { Router, NavigationEnd } from '@angular/router';
 import { filter, shareReplay, take, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { UserService } from './pages/services/userService';
 import { TokenService } from './@core/services/auth/token.service';
+import { Router, NavigationStart, NavigationCancel, NavigationError, NavigationEnd } from '@angular/router';
+//import { filter } from 'rxjs/operators';
 
 declare let gtag: (config: string, code: string, path: any) => void;
 
@@ -27,14 +29,22 @@ export class AppComponent implements OnInit {
     private userService: UserService,
     public tokenService: TokenService,
   ) {
+    // this.router.events
+    //   .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+    //   .subscribe((event) => {
+    //     console.log('[ROUTER] NavigationEnd →', event.urlAfterRedirects ?? event.url);
+    //     gtag('config', 'G-RBY2GQV40M', {
+    //       page_path: event.urlAfterRedirects,
+    //     });
+    //   });
     this.router.events
-      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
-      .subscribe((event) => {
-        console.log('[ROUTER] NavigationEnd →', event.urlAfterRedirects ?? event.url);
-        gtag('config', 'G-RBY2GQV40M', {
-          page_path: event.urlAfterRedirects,
-        });
-      });
+    .pipe(filter(e =>
+      e instanceof NavigationStart ||
+      e instanceof NavigationEnd ||
+      e instanceof NavigationCancel ||
+      e instanceof NavigationError
+    ))
+    .subscribe(e => console.log('[ROUTER]', e));
   }
 
   ngOnInit(): void {

@@ -1,0 +1,36 @@
+.tutor-registro-wrap {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.tutor-card {
+  width: min(720px, 100%);
+}
+
+.form {
+  margin-top: 16px;
+}
+
+.full {
+  width: 100%;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+
+.hint {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
