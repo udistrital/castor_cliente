@@ -89,7 +89,13 @@ type ExtraAction<T> = {
       </header>
 
       <section class="table-wrapper" *ngIf="!serverMode; else serverTable">
-        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z0">
+        <table
+          *ngIf="displayedColumns().length"
+          mat-table
+          [dataSource]="dataSource"
+          matSort
+          class="mat-elevation-z0"
+        >
           <ng-container *ngFor="let c of columns" [matColumnDef]="columnKey(c)">
             <th
               mat-header-cell
@@ -155,13 +161,19 @@ type ExtraAction<T> = {
             </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
         </table>
       </section>
 
       <ng-template #serverTable>
-        <table mat-table [dataSource]="serverData()" matSort (matSortChange)="onSort($event)">
+        <table
+          *ngIf="displayedColumns().length"
+          mat-table
+          [dataSource]="serverData()"
+          matSort
+          (matSortChange)="onSort($event)"
+        >
           <ng-container *ngFor="let c of columns" [matColumnDef]="columnKey(c)">
             <th
               mat-header-cell
@@ -227,8 +239,8 @@ type ExtraAction<T> = {
             </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
         </table>
       </ng-template>
 
@@ -281,7 +293,7 @@ export class DataTableComponent<T = any>
   readonly serverData = signal<T[]>([]);
 
   readonly displayedColumns = computed(() => {
-    const cols = this.columns.map((c) => this.columnKey(c));
+    const cols = (this.columns ?? []).map((c) => this.columnKey(c));
     return this.showActions() ? [...cols, '__actions'] : cols;
   });
 

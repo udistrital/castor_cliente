@@ -13,6 +13,16 @@ export const environment = {
   CONFIGURACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/configuracion_crud_api/v1/',
   CONF_MENU_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/configuracion_crud_api/v1/menu_opcion_padre/ArbolMenus/',
   NOTIFICACION_SERVICE: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/notificacion_mid/v1/',
+  API_BASES: {
+    castor_mid: 'http://localhost:8080/v1/',
+    autenticacion_mid: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/autenticacion_mid/v1/',
+    academica: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/academica_jbpm/v2',
+    polux_mid: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/polux_mid/v1/',
+    polux: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/polux_crud/v1/',
+    gestor_doc_mid: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1',
+    oikos: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/oikos_crud_api/v2/',
+    castor_crud: 'http://localhost:8081/v1/', 
+  },
   TOKEN: {
     AUTORIZATION_URL: 'https://autenticacion.portaloas.udistrital.edu.co/oauth2/authorize',
     CLIENTE_ID: 'solicitar token a arquitectura',

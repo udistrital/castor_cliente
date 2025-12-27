@@ -1,6 +1,9 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+
+
+
 const routes: Routes = [
   {
     path: 'pages',
@@ -18,6 +21,7 @@ const routes: Routes = [
       useHash: true,
     })
   ],
+  providers: [],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }
