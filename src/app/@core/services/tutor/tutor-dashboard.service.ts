@@ -37,6 +37,18 @@ export interface TerceroDTO {
   SegundoApellido?: string;
 }
 
+export interface CrearOfertaRequest {
+  oferta: {
+    titulo: string;
+    descripcion: string;
+    empresa_tercero_id: number;
+    modalidad: string;
+    estado: string;
+    tutor_externo_id: number;
+  };
+  proyectos_curriculares: number[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class TutorDashboardService {
   constructor(private rm: RequestManager) {}
@@ -52,6 +64,43 @@ export class TutorDashboardService {
   // Para traer nombre del tutor (desde Terceros vía MID)
   getTutorById(id: number): Observable<any> {
     return this.rm.get('castor_mid', `terceros/tutor/${id}`);
+  }
+
+  getEmpresaById(id: number): Observable<any> {
+    return this.rm.get('castor_mid', `terceros/empresa/${id}`);
+  }
+
+  getOfertasAbiertas(tutorId: number): Observable<any> {
+    return this.rm.get('castor_mid', `ofertas/abiertas?tutor_id=${tutorId}`);
+  }
+
+  getOfertasEnCurso(tutorId: number): Observable<any> {
+    return this.rm.get('castor_mid', `ofertas/en-curso?tutor_id=${tutorId}`);
+  }
+
+  getOfertasAbiertasByTutorId(tutorId: number): Observable<any> {
+    return this.rm.get('castor_mid', `ofertas/abiertas?tutor_id=${tutorId}`);
+  }
+
+  getOfertasEnCursoByTutorId(tutorId: number): Observable<any> {
+    return this.rm.get('castor_mid', `ofertas/en-curso?tutor_id=${tutorId}`);
+  }
+
+  getPostulacionesByOfertaId(ofertaId: number): Observable<any> {
+    return this.rm.get('castor_mid', `ofertas/${ofertaId}/postulaciones`);
+  }
+
+  explorarEstudiantesPorPcId(pcId: number): Observable<any> {
+    return this.rm.get('castor_mid', `explorar/estudiantes?pc_id=${pcId}`);
+  }
+
+  crearOferta(payload: CrearOfertaRequest): Observable<any> {
+    console.log('[TutorDashboardService] crearOferta payload=', payload);
+    return this.rm.post('castor_mid', 'ofertas', payload);
+  }
+
+  getOfertasTodas(tutorId: number): Observable<any> {
+    return this.rm.get('castor_mid', `ofertas?tutor_id=${tutorId}`);
   }
 
   // Alias por compatibilidad si tu componente aún llama crearEmpresa()

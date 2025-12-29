@@ -1,24 +1,29 @@
-<div class="p-6 max-w-2xl mx-auto">
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>
-        Registro de empresa
-      </mat-card-title>
-      <mat-card-subtitle>
+<div class="tutor-registro">
+  <mat-card class="tutor-card">
+    <div class="tutor-card__glow" aria-hidden="true"></div>
+    <mat-card-header class="tutor-card__header">
+      <mat-card-title class="tutor-card__title">Registro de empresa</mat-card-title>
+      <mat-card-subtitle class="tutor-card__subtitle">
         <ng-container *ngIf="tutorNombre; else sinNombre">
-          Hola, {{ tutorNombre }}. Asocia tu empresa para continuar.
+          Hola, <strong>{{ tutorNombre }}</strong>. Asocia la empresa donde trabajas.
         </ng-container>
         <ng-template #sinNombre>
-          Asocia tu empresa para continuar.
+          Asocia la empresa donde trabajas para continuar.
         </ng-template>
       </mat-card-subtitle>
     </mat-card-header>
 
-    <mat-card-content class="mt-4">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid gap-4">
+    <mat-card-content>
+      <div class="tutor-card__intro">
+        Completa los datos básicos para vincularte. Esta información se usará en tus
+        procesos como tutor.
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="tutor-form">
         <mat-form-field appearance="outline">
           <mat-label>NIT (sin dígito de verificación)</mat-label>
           <input matInput formControlName="nit_sin_dv" autocomplete="off" />
+          <mat-hint>Ejemplo: 900123456</mat-hint>
           <mat-error *ngIf="form.controls.nit_sin_dv.invalid">
             NIT requerido
           </mat-error>
@@ -27,12 +32,13 @@
         <mat-form-field appearance="outline">
           <mat-label>Razón social</mat-label>
           <input matInput formControlName="razon_social" autocomplete="off" />
+          <mat-hint>Ejemplo: Fundación Castor</mat-hint>
           <mat-error *ngIf="form.controls.razon_social.invalid">
             Razón social requerida
           </mat-error>
         </mat-form-field>
 
-        <div class="flex gap-3 justify-end mt-2">
+        <div class="tutor-actions">
           <button mat-stroked-button type="button" (click)="onCancel()">
             Cancelar
           </button>
