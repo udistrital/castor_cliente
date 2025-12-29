@@ -1,0 +1,74 @@
+<div class="tutor-registro">
+  <mat-card class="tutor-card">
+    <div class="tutor-card__glow" aria-hidden="true"></div>
+    <mat-card-header class="tutor-card__header">
+      <mat-card-title class="tutor-card__title">Nueva oferta</mat-card-title>
+      <mat-card-subtitle class="tutor-card__subtitle">
+        Completa los datos de la oferta de pasantía. Los campos obligatorios están marcados.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="tutor-card__intro">
+        Esta oferta se publicará con el tutor y empresa asociados a tu perfil.
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="tutor-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Título</mat-label>
+          <input matInput formControlName="titulo" autocomplete="off" />
+          <mat-error *ngIf="form.controls.titulo.invalid">Título requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Descripción</mat-label>
+          <textarea matInput formControlName="descripcion" rows="3"></textarea>
+          <mat-hint>Opcional</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Empresa (tercero)</mat-label>
+          <input matInput formControlName="empresa_tercero_id" autocomplete="off" />
+          <mat-hint>Se autocompleta desde tu perfil</mat-hint>
+          <mat-error *ngIf="form.controls.empresa_tercero_id.invalid">Empresa requerida</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Modalidad</mat-label>
+          <input matInput formControlName="modalidad" autocomplete="off" />
+          <mat-hint>Opcional</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="estado">
+            <mat-option value="">Por defecto (OPC_CTR)</mat-option>
+            <mat-option value="OPC_CTR">OPC_CTR</mat-option>
+            <mat-option value="OPCUR_CTR">OPCUR_CTR</mat-option>
+            <mat-option value="OPCAN_CTR">OPCAN_CTR</mat-option>
+            <mat-option value="OPFIN_CTR">OPFIN_CTR</mat-option>
+          </mat-select>
+          <mat-hint>Opcional</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Tutor externo</mat-label>
+          <input matInput formControlName="tutor_externo_id" autocomplete="off" />
+          <mat-hint>Se autocompleta desde tu perfil</mat-hint>
+          <mat-error *ngIf="form.controls.tutor_externo_id.invalid">Tutor requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Proyectos curriculares</mat-label>
+          <input matInput formControlName="proyectos_curriculares" autocomplete="off" />
+          <mat-hint>Opcional. IDs separados por coma: 10, 25, 33</mat-hint>
+        </mat-form-field>
+
+        <div class="tutor-actions">
+          <button mat-stroked-button type="button" (click)="onCancel()">Cancelar</button>
+          <button mat-raised-button color="primary" type="submit">Crear oferta</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

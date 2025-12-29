@@ -76,7 +76,7 @@ export class TutorRegistroComponent implements OnInit {
       if (this.tutorId) {
         try {
           const tercero = await firstValueFrom(this.tutorDashboard.getTutorById(this.tutorId));
-          const t = (tercero as any)?.Body ?? tercero;
+          const t = (tercero as any)?.Body ?? (tercero as any)?.Data ?? tercero;
           this.tutorNombre = (t?.NombreCompleto || '').trim();
         } catch {
           this.tutorNombre = '';
@@ -123,9 +123,14 @@ export class TutorRegistroComponent implements OnInit {
         })
       );
 
+      const estado = await firstValueFrom(this.tutorDashboard.getEstado({ numero_documento: documento }));
       this.loading.hide();
-      await this.alert.success('Listo', 'Empresa registrada y vinculada.');
-      this.router.navigateByUrl('/pages/tutor/dashboard');
+      if (estado?.Data && estado.Data.needs_empresa === false) {
+        await this.alert.success('Listo', 'Empresa registrada y vinculada.');
+        this.router.navigateByUrl('/pages/tutor/dashboard', { replaceUrl: true });
+        return;
+      }
+      this.alert.error('Error', 'No fue posible confirmar el estado del tutor.');
     } catch (err) {
       this.loading.hide();
       console.error('[TutorRegistroComponent] submit error', err);

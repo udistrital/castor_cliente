@@ -1,1 +1,419 @@
-<h1>Dashboard Tutor</h1>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
+  <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Panel tutor</div>
+      <button
+        mat-flat-button
+        color="primary"
+        [routerLink]="['/pages/tutor/ofertas/nueva']"
+        class="shadow-sm"
+      >
+        Crear oferta de pasantía
+      </button>
+    </div>
+
+    <mat-card appearance="outlined" class="rounded-3xl border border-slate-200 bg-white/80 shadow-sm">
+      <mat-card-content>
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div class="space-y-2">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Panel tutor</p>
+            <h1 class="text-3xl font-semibold text-slate-900">
+              Hola, {{ tutorNombre || 'Tutor' }}
+            </h1>
+            <p class="text-sm text-slate-600">
+              Aqui puedes gestionar tus ofertas, postulaciones y seguimiento en curso.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <mat-chip-listbox aria-label="Empresa asociada">
+              <mat-chip class="bg-emerald-50 text-emerald-700">
+                Empresa asociada: {{ empresaNombre || ('ID: ' + (empresaId || 'Pendiente')) }}
+              </mat-chip>
+            </mat-chip-listbox>
+            <span matTooltip="En construccion" [matTooltipDisabled]="canCrearOferta">
+              <button
+                mat-flat-button
+                color="primary"
+                [disabled]="!canCrearOferta"
+                (click)="goToCrearOferta()"
+              >
+                Crear oferta
+              </button>
+            </span>
+            <button
+              mat-stroked-button
+              color="primary"
+              [disabled]="!canExplorarEstudiantes"
+              (click)="goToExplorarEstudiantes()"
+            >
+              Explorar estudiantes
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <div *ngIf="errorMessage" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="loading" class="flex items-center justify-center rounded-3xl border border-slate-200 bg-white py-12">
+      <mat-progress-spinner diameter="48" mode="indeterminate"></mat-progress-spinner>
+    </div>
+
+    <ng-container *ngIf="!loading && !errorMessage">
+      <div class="grid gap-4 md:grid-cols-4">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Abiertas</p>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">{{ ofertasAbiertas.length }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">En curso</p>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">{{ ofertasEnCurso.length }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Finalizadas</p>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">{{ ofertasFinalizadas.length }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Canceladas</p>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">{{ ofertasCanceladas.length }}</p>
+        </div>
+      </div>
+
+      <mat-card appearance="outlined" class="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <mat-card-content>
+          <div *ngIf="errorOfertas" class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {{ errorOfertas }}
+          </div>
+          <div *ngIf="loadingOfertas" class="mb-4 flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-6">
+            <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+          </div>
+          <mat-tab-group class="tutor-tabs">
+            <mat-tab>
+              <ng-template mat-tab-label>
+                Abiertas
+                <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                  {{ ofertasAbiertas.length }}
+                </span>
+              </ng-template>
+              <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <ng-container *ngIf="ofertasAbiertas.length; else emptyAbiertas">
+                  <mat-card
+                    *ngFor="let oferta of ofertasAbiertas"
+                    appearance="outlined"
+                    class="rounded-2xl border border-slate-200 shadow-sm"
+                  >
+                    <mat-card-content>
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="text-xs text-slate-500">Oferta #{{ getOfertaIdLabel(oferta) }}</p>
+                          <h3 class="text-lg font-semibold text-slate-900">
+                            {{ getOfertaNombre(oferta) }}
+                          </h3>
+                        </div>
+                        <app-estado-chip
+                          [codigo]="oferta?.estado || getEstadoCodigo(oferta)"
+                          [nombre]="getEstadoNombre(oferta)"
+                        ></app-estado-chip>
+                      </div>
+                      <div class="mt-4 flex items-center justify-between">
+                        <span class="text-xs text-slate-500">Gestiona postulaciones activas</span>
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          [disabled]="!canVerPostulaciones"
+                          [routerLink]="['/pages/tutor/ofertas', (oferta.id ?? oferta.Id)]"
+                        >
+                          Ver postulaciones
+                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </ng-container>
+                <ng-template #emptyAbiertas>
+                  <div class="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                    Aun no tienes ofertas abiertas.
+                  </div>
+                </ng-template>
+              </div>
+            </mat-tab>
+
+            <mat-tab>
+              <ng-template mat-tab-label>
+                En curso
+                <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                  {{ ofertasEnCurso.length }}
+                </span>
+              </ng-template>
+              <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <ng-container *ngIf="ofertasEnCurso.length; else emptyEnCurso">
+                  <mat-card
+                    *ngFor="let oferta of ofertasEnCurso"
+                    appearance="outlined"
+                    class="rounded-2xl border border-slate-200 shadow-sm"
+                  >
+                    <mat-card-content>
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="text-xs text-slate-500">Oferta #{{ getOfertaIdLabel(oferta) }}</p>
+                          <h3 class="text-lg font-semibold text-slate-900">
+                            {{ getOfertaNombre(oferta) }}
+                          </h3>
+                        </div>
+                        <app-estado-chip
+                          [codigo]="oferta?.estado || getEstadoCodigo(oferta)"
+                          [nombre]="getEstadoNombre(oferta)"
+                        ></app-estado-chip>
+                      </div>
+                      <div class="mt-4 flex items-center justify-between">
+                        <span class="text-xs text-slate-500">Seguimiento y avance</span>
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          [disabled]="!canVerPostulaciones"
+                          [routerLink]="['/pages/tutor/ofertas', (oferta.id ?? oferta.Id)]"
+                        >
+                          Ver postulaciones
+                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </ng-container>
+                <ng-template #emptyEnCurso>
+                  <div class="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                    No hay ofertas en curso en este momento.
+                  </div>
+                </ng-template>
+              </div>
+            </mat-tab>
+
+            <mat-tab>
+              <ng-template mat-tab-label>
+                Finalizadas
+                <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                  {{ ofertasFinalizadas.length }}
+                </span>
+              </ng-template>
+              <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <ng-container *ngIf="ofertasFinalizadas.length; else emptyFinalizadas">
+                  <mat-card
+                    *ngFor="let oferta of ofertasFinalizadas"
+                    appearance="outlined"
+                    class="rounded-2xl border border-slate-200 shadow-sm"
+                  >
+                    <mat-card-content>
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="text-xs text-slate-500">Oferta #{{ getOfertaIdLabel(oferta) }}</p>
+                          <h3 class="text-lg font-semibold text-slate-900">
+                            {{ getOfertaNombre(oferta) }}
+                          </h3>
+                        </div>
+                        <app-estado-chip
+                          [codigo]="oferta?.estado || getEstadoCodigo(oferta)"
+                          [nombre]="getEstadoNombre(oferta)"
+                        ></app-estado-chip>
+                      </div>
+                      <div class="mt-4 flex items-center justify-between">
+                        <span class="text-xs text-slate-500">Historial de cierre</span>
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          [disabled]="!canVerPostulaciones"
+                          [routerLink]="['/pages/tutor/ofertas', (oferta.id ?? oferta.Id)]"
+                        >
+                          Ver postulaciones
+                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </ng-container>
+                <ng-template #emptyFinalizadas>
+                  <div class="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                    Todavia no tienes ofertas finalizadas.
+                  </div>
+                </ng-template>
+              </div>
+            </mat-tab>
+
+            <mat-tab>
+              <ng-template mat-tab-label>
+                Canceladas
+                <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                  {{ ofertasCanceladas.length }}
+                </span>
+              </ng-template>
+              <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <ng-container *ngIf="ofertasCanceladas.length; else emptyCanceladas">
+                  <mat-card
+                    *ngFor="let oferta of ofertasCanceladas"
+                    appearance="outlined"
+                    class="rounded-2xl border border-slate-200 shadow-sm"
+                  >
+                    <mat-card-content>
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="text-xs text-slate-500">Oferta #{{ getOfertaIdLabel(oferta) }}</p>
+                          <h3 class="text-lg font-semibold text-slate-900">
+                            {{ getOfertaNombre(oferta) }}
+                          </h3>
+                        </div>
+                        <app-estado-chip
+                          [codigo]="oferta?.estado || getEstadoCodigo(oferta)"
+                          [nombre]="getEstadoNombre(oferta)"
+                        ></app-estado-chip>
+                      </div>
+                      <div class="mt-4 flex items-center justify-between">
+                        <span class="text-xs text-slate-500">Registro de cancelacion</span>
+                        <button
+                          mat-stroked-button
+                          color="primary"
+                          [disabled]="!canVerPostulaciones"
+                          [routerLink]="['/pages/tutor/ofertas', (oferta.id ?? oferta.Id)]"
+                        >
+                          Ver postulaciones
+                        </button>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </ng-container>
+                <ng-template #emptyCanceladas>
+                  <div class="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                    No hay ofertas canceladas por ahora.
+                  </div>
+                </ng-template>
+              </div>
+            </mat-tab>
+            <mat-tab>
+              <ng-template mat-tab-label>
+                Explorar estudiantes
+              </ng-template>
+              <div class="mt-6 space-y-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <mat-form-field appearance="outline" class="w-full sm:w-64">
+                    <mat-label>PC ID</mat-label>
+                    <input matInput type="number" [formControl]="pcIdCtrl" placeholder="Ej: 1234" />
+                  </mat-form-field>
+                  <button mat-flat-button color="primary" (click)="buscarEstudiantes()">
+                    Buscar
+                  </button>
+                </div>
+
+                <div *ngIf="errorEstudiantes" class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                  {{ errorEstudiantes }}
+                </div>
+
+                <div *ngIf="loadingEstudiantes" class="flex items-center justify-center rounded-2xl border border-slate-200 bg-white py-6">
+                  <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
+                </div>
+
+                <ng-container *ngIf="!loadingEstudiantes && !errorEstudiantes">
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <ng-container *ngIf="estudiantes.length; else emptyEstudiantes">
+                      <mat-card
+                        *ngFor="let estudiante of estudiantes"
+                        appearance="outlined"
+                        class="rounded-2xl border border-slate-200 bg-white shadow-sm"
+                      >
+                        <mat-card-content>
+                          <p class="text-sm font-semibold text-slate-900">
+                            {{ estudiante?.NombreCompleto || estudiante?.nombre_completo || estudiante?.Nombre || estudiante?.nombre || 'Estudiante' }}
+                          </p>
+                          <p class="text-xs text-slate-500">
+                            Codigo: {{ estudiante?.Codigo || estudiante?.codigo || 'N/D' }}
+                          </p>
+                        </mat-card-content>
+                      </mat-card>
+                    </ng-container>
+                    <ng-template #emptyEstudiantes>
+                      <div class="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                        Ingresa un PC ID para buscar estudiantes.
+                      </div>
+                    </ng-template>
+                  </div>
+                </ng-container>
+              </div>
+            </mat-tab>
+            <mat-tab>
+              <ng-template mat-tab-label>
+                Invitaciones
+              </ng-template>
+              <div class="mt-6 space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-semibold text-slate-900">Invitaciones</p>
+                    <p class="text-xs text-slate-500">Organizadas por estado</p>
+                  </div>
+                  <span matTooltip="Pendiente endpoint de invitaciones">
+                    <button mat-flat-button color="primary" disabled>
+                      Enviar invitacion
+                    </button>
+                  </span>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                  <mat-card appearance="outlined" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <mat-card-content>
+                      <p class="text-sm font-semibold text-slate-900">Enviadas (INV_ENV_CTR)</p>
+                      <div class="mt-3">
+                        <div *ngIf="invitacionesEnviadas.length; else emptyInvEnviadas"></div>
+                        <ng-template #emptyInvEnviadas>
+                          <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                            Sin invitaciones enviadas.
+                          </div>
+                        </ng-template>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <mat-card appearance="outlined" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <mat-card-content>
+                      <p class="text-sm font-semibold text-slate-900">Aceptadas (INV_ACE_CTR)</p>
+                      <div class="mt-3">
+                        <div *ngIf="invitacionesAceptadas.length; else emptyInvAceptadas"></div>
+                        <ng-template #emptyInvAceptadas>
+                          <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                            Sin invitaciones aceptadas.
+                          </div>
+                        </ng-template>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <mat-card appearance="outlined" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <mat-card-content>
+                      <p class="text-sm font-semibold text-slate-900">Rechazadas (INV_RECH_CTR)</p>
+                      <div class="mt-3">
+                        <div *ngIf="invitacionesRechazadas.length; else emptyInvRechazadas"></div>
+                        <ng-template #emptyInvRechazadas>
+                          <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                            Sin invitaciones rechazadas.
+                          </div>
+                        </ng-template>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <mat-card appearance="outlined" class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <mat-card-content>
+                      <p class="text-sm font-semibold text-slate-900">Canceladas (INV_CAN_CTR)</p>
+                      <div class="mt-3">
+                        <div *ngIf="invitacionesCanceladas.length; else emptyInvCanceladas"></div>
+                        <ng-template #emptyInvCanceladas>
+                          <div class="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                            Sin invitaciones canceladas.
+                          </div>
+                        </ng-template>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card-content>
+      </mat-card>
+    </ng-container>
+  </div>
+</div>

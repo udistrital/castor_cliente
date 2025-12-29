@@ -46,7 +46,7 @@ const routes: Routes = [{
         // 🔒 El resto con RoleGuard (menú)
         {
           path: 'dashboard',
-          canActivate: [NavGuard, RoleGuard],
+          //canActivate: [RoleGuard],
           loadComponent: () => import('./tutor/dashboard/tutor-dashboard.component').then(m => m.TutorDashboardComponent),
         },
         {
@@ -58,6 +58,15 @@ const routes: Routes = [{
           path: 'ofertas/crear',
           canActivate: [NavGuard, RoleGuard],
           loadComponent: () => import('./tutor/ofertas/oferta-create.component').then(m => m.OfertaCreateComponent),
+        },
+        {
+          path: 'ofertas/nueva',
+          loadComponent: () => import('./tutor/ofertas/nueva/tutor-oferta-nueva.component').then(m => m.TutorOfertaNuevaComponent),
+        },
+        {
+          path: 'ofertas/:id',
+          canActivate: [NavGuard, RoleGuard],
+          loadComponent: () => import('./tutor/ofertas/oferta-detalle/tutor-oferta-detalle.component').then(m => m.TutorOfertaDetalleComponent),
         },
         {
           path: 'ofertas/:id/postulaciones',

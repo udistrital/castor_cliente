@@ -19,6 +19,7 @@ export class AppComponent implements OnInit {
   environment = environment;
   title = 'castor-cliente';
   private hasNavigatedToCheck = false;
+  private readonly postLoginNavKey = 'castor_post_login_nav_done';
   private readonly userReady$ = this.tokenService.needUserWithRoles().pipe(
     tap((u) => console.log('[APP] user hidratado →', u)),
     shareReplay(1)
@@ -52,10 +53,16 @@ export class AppComponent implements OnInit {
       if (!user || this.hasNavigatedToCheck) {
         return;
       }
+      const navDone = sessionStorage.getItem(this.postLoginNavKey) === '1';
+      const currentUrl = this.router.url || '/';
+      if (navDone || !this.isNeutralRoute(currentUrl)) {
+        return;
+      }
       this.hasNavigatedToCheck = true;
       this.loadRouting = true;
       console.log('[APP] Navi → /pages/check');
       this.router.navigateByUrl('/pages/check');
+      sessionStorage.setItem(this.postLoginNavKey, '1');
     });
 
     const oas = document.querySelector('ng-uui-oas');
@@ -83,5 +90,16 @@ export class AppComponent implements OnInit {
         console.log(event.detail);
       }
     });
+  }
+
+  private isNeutralRoute(url: string): boolean {
+    const normalized = url.split('?')[0].split('#')[0];
+    return (
+      normalized === '/' ||
+      normalized === '/pages' ||
+      normalized === '/pages/home' ||
+      normalized === '/auth' ||
+      normalized === '/pages/check'
+    );
   }
 }
