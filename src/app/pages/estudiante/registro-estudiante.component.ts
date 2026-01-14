@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core'; // 👈 quitamos "signal"
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -68,6 +69,7 @@ export class RegistroEstudianteComponent implements OnInit {
   ) {}
 
   async ngOnInit() {
+    this.loading.hide();
     const ctx = this.readJson('castor_estudiante_ctx');
 
     this.nombre = ctx?.nombre || this.token.currentUser?.email || '';
@@ -84,20 +86,21 @@ export class RegistroEstudianteComponent implements OnInit {
 
     if (this.pcId) {
       this.loading.show('Resolviendo proyecto curricular…');
-      this.catalogos.getNombreProyectoCurricular(this.pcId).subscribe({
-        next: (nombre) => {
-          this.pcNombre = nombre;
-          this.loading.hide();
-        },
-        error: () => {
-          this.pcNombre = null;
-          this.loading.hide();
-        },
-      });
+      this.catalogos
+        .getNombreProyectoCurricular(this.pcId)
+        .pipe(finalize(() => this.loading.hide()))
+        .subscribe({
+          next: (nombre) => {
+            this.pcNombre = nombre;
+          },
+          error: () => {
+            this.pcNombre = null;
+          },
+        });
     }
 
     if (!this.getTerceroIdFromContext()) {
-      await this.resolveTerceroIdFromDocumento(true);
+      await this.resolveTerceroIdFromDocumento(false);
     }
   }
 
@@ -243,19 +246,20 @@ export class RegistroEstudianteComponent implements OnInit {
 
     try {
       const resp = await firstValueFrom(this.estudiantes.consultarPorDocumento(String(documento)));
-      if (resp?.relacionado === false && resp?.mensaje) {
-        if (showErrors) {
-          this.alert.error('Validación de tercero', resp.mensaje);
-        }
-        return null;
-      }
       const terceroId = typeof resp?.tercero_id === 'number' ? resp.tercero_id : null;
       if (terceroId && terceroId > 0) {
         this.persistTerceroId(terceroId);
         return terceroId;
       }
       if (showErrors) {
-        const mensaje = resp?.mensaje || 'No se pudo identificar el tercero asociado a tu documento.';
+        const mensajeRaw = resp?.mensaje || '';
+        const mensajeLower = mensajeRaw.toLowerCase();
+        const esErrorTerceros =
+          mensajeLower.includes('terceros') ||
+          mensajeLower.includes('no se encuentra registrado en terceros');
+        const mensaje = esErrorTerceros
+          ? (mensajeRaw || 'No se pudo identificar el tercero asociado a tu documento.')
+          : 'No se pudo identificar el tercero asociado a tu documento.';
         this.alert.error('Validación de tercero', mensaje);
       }
       return null;
