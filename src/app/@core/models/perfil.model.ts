@@ -3,6 +3,10 @@ export interface PerfilEstudiante {
   tercero_id: number;
   proyecto_curricular_id: number;
   proyecto_curricular_nombre?: string;
+  proyecto_curricular?: {
+    id: number;
+    nombre: string;
+  };
   resumen?: string;
   habilidades?: string | string[];
   cv_documento_id?: string;

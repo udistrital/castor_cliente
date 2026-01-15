@@ -24,9 +24,7 @@ export class EstudiantesService {
   }
 
   obtenerPerfilPorTercero(terceroId: number): Observable<PerfilEstudiante | null> {
-    return this.requestManager
-      .get<ApiEnvelope<PerfilEstudiante>>('castor_mid', `estudiantes/perfil/tercero/${terceroId}`)
-      .pipe(map((res) => res?.Data ?? null));
+    return this.getMiPerfil(terceroId);
   }
 
   createPerfil(payload: unknown): Observable<unknown> {

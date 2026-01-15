@@ -252,7 +252,10 @@ export class RegistroEstudianteComponent implements OnInit {
         return terceroId;
       }
       if (showErrors) {
-        const mensajeRaw = resp?.mensaje || '';
+        const mensajeRaw =
+          resp?.relacionado === false
+            ? resp?.mensaje || ''
+            : '';
         const mensajeLower = mensajeRaw.toLowerCase();
         const esErrorTerceros =
           mensajeLower.includes('terceros') ||

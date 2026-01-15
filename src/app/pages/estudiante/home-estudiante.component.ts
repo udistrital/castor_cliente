@@ -10,11 +10,9 @@ import { GlobalLoadingOverlayComponent } from '../../@shared/components/global-l
 import { TokenService } from '../../@core/services/auth/token.service';
 import { LoadingService } from '../../@core/services/ui/loading.service';
 import { EstudiantesService } from '../../@core/services/estudiantes.service';
-import { CatalogosService } from '../../@core/services/catalogos/catalogos.service';
 import { UserContextService } from '../../@core/services/user-context.service';
 import { PerfilEstudiante } from '../../@core/models/perfil.model';
 import { AcademicService } from 'src/app/@core/services/academica/academic.service';
-import { DependenciasService } from 'src/app/@core/services/dependencias/dependencias.service';
 import { take } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -47,10 +45,8 @@ export class HomeEstudianteComponent implements OnInit {
     private token: TokenService,
     private loading: LoadingService,
     private estudiantes: EstudiantesService,
-    private catalogos: CatalogosService,
     private userContext: UserContextService,
     private academica: AcademicService,
-    private dependencias: DependenciasService,
   ) {}
 
   ngOnInit(): void {
@@ -60,11 +56,13 @@ export class HomeEstudianteComponent implements OnInit {
 
   private async loadPerfil(): Promise<void> {
     try {
+      const stored = this.readJson('castor_estudiante_ctx');
       const ctx = this.userContext.getEstudianteContext();
       const currentUser = this.token.currentUser as any;
 
       const terceroId =
         ctx?.tercero_id ??
+        stored?.tercero_id ??
         currentUser?.rawTokenPayload?.tercero_id ??
         currentUser?.tercero_id ??
         null;
@@ -99,31 +97,19 @@ export class HomeEstudianteComponent implements OnInit {
         return;
       }
 
-      this.loadProyectoCurricularNombre(this.perfil.proyecto_curricular_id);
+      const pcNombre =
+        this.perfil?.proyecto_curricular_nombre ||
+        (this.perfil as any)?.proyecto_curricular?.nombre ||
+        (this.perfil?.proyecto_curricular_id
+          ? `Proyecto curricular #${this.perfil.proyecto_curricular_id}`
+          : 'Proyecto curricular sin especificar');
+      this.pcNombre = pcNombre;
+      this.ctxPcNombre = pcNombre;
     } catch (error) {
       console.error('[HOME ESTUDIANTE] Error cargando perfil', error);
       this.loading.hide();
       Swal.fire('Error', 'No pudimos cargar tu perfil. Intenta más tarde.', 'error');
     }
-  }
-
-  private loadProyectoCurricularNombre(id: number): void {
-    if (!id) {
-      this.pcNombre = 'Proyecto curricular sin especificar';
-      return;
-    }
-    this.catalogos.getNombreProyectoCurricular(id).subscribe({
-      next: (nombre) => {
-        const resolved = nombre || `Proyecto curricular #${id}`;
-        this.pcNombre = resolved;
-        this.ctxPcNombre = resolved;
-      },
-      error: () => {
-        const fallback = `Proyecto curricular #${id}`;
-        this.pcNombre = fallback;
-        this.ctxPcNombre = fallback;
-      },
-    });
   }
 
   private bootstrapContext(): void {
@@ -155,20 +141,7 @@ export class HomeEstudianteComponent implements OnInit {
         });
     }
 
-
-    if (this.ctxPcId) {
-      const codigo = Number(this.ctxPcId);
-      if (Number.isFinite(codigo) && codigo > 0) {
-        this.dependencias.getProyectoNombrePorCodigo(codigo).subscribe({
-          next: (nombre) => (this.ctxPcNombre = nombre),
-          error: () => (this.ctxPcNombre = null),
-        });
-      } else {
-        this.ctxPcNombre = null;
-      }
-    } else {
-      this.ctxPcNombre = null;
-    }
+    this.ctxPcNombre = null;
   }
 
   private readJson(key: string): any {
