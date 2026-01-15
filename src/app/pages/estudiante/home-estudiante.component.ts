@@ -14,6 +14,7 @@ import { CatalogosService } from '../../@core/services/catalogos/catalogos.servi
 import { UserContextService } from '../../@core/services/user-context.service';
 import { PerfilEstudiante } from '../../@core/models/perfil.model';
 import { AcademicService } from 'src/app/@core/services/academica/academic.service';
+import { DependenciasService } from 'src/app/@core/services/dependencias/dependencias.service';
 import { take } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -49,6 +50,7 @@ export class HomeEstudianteComponent implements OnInit {
     private catalogos: CatalogosService,
     private userContext: UserContextService,
     private academica: AcademicService,
+    private dependencias: DependenciasService,
   ) {}
 
   ngOnInit(): void {
@@ -67,15 +69,6 @@ export class HomeEstudianteComponent implements OnInit {
         currentUser?.tercero_id ??
         null;
 
-      const documento =
-        currentUser?.rawTokenPayload?.documento ??
-        currentUser?.documento ??
-        currentUser?.rawTokenPayload?.document ??
-        currentUser?.document ??
-        this.token.documento ??
-        ctx?.documento ??
-        null;
-
       const codigo =
         currentUser?.rawTokenPayload?.Codigo ??
         currentUser?.Codigo ??
@@ -88,10 +81,16 @@ export class HomeEstudianteComponent implements OnInit {
       this.loading.show('Cargando tu perfil…');
 
       if (terceroId) {
-        this.perfil = await firstValueFrom(this.estudiantes.obtenerPerfilPorTercero(terceroId));
-      } else if (documento) {
-        const resp = await firstValueFrom(this.estudiantes.consultarPorDocumento(String(documento)));
-        this.perfil = resp?.relacionado ? (resp as any).perfil : null;
+        try {
+          this.perfil = await firstValueFrom(this.estudiantes.getMiPerfil(terceroId));
+        } catch (error: any) {
+          const message = String(error?.message || '');
+          if (message.includes('404')) {
+            this.perfil = null;
+          } else {
+            throw error;
+          }
+        }
       }
 
       this.loading.hide();
@@ -115,10 +114,14 @@ export class HomeEstudianteComponent implements OnInit {
     }
     this.catalogos.getNombreProyectoCurricular(id).subscribe({
       next: (nombre) => {
-        this.pcNombre = nombre || `Proyecto curricular #${id}`;
+        const resolved = nombre || `Proyecto curricular #${id}`;
+        this.pcNombre = resolved;
+        this.ctxPcNombre = resolved;
       },
       error: () => {
-        this.pcNombre = `Proyecto curricular #${id}`;
+        const fallback = `Proyecto curricular #${id}`;
+        this.pcNombre = fallback;
+        this.ctxPcNombre = fallback;
       },
     });
   }
@@ -154,10 +157,15 @@ export class HomeEstudianteComponent implements OnInit {
 
 
     if (this.ctxPcId) {
-      this.catalogos.getNombreProyectoCurricular(this.ctxPcId).subscribe({
-        next: (nombre) => (this.ctxPcNombre = nombre),
-        error: () => (this.ctxPcNombre = null),
-      });
+      const codigo = Number(this.ctxPcId);
+      if (Number.isFinite(codigo) && codigo > 0) {
+        this.dependencias.getProyectoNombrePorCodigo(codigo).subscribe({
+          next: (nombre) => (this.ctxPcNombre = nombre),
+          error: () => (this.ctxPcNombre = null),
+        });
+      } else {
+        this.ctxPcNombre = null;
+      }
     } else {
       this.ctxPcNombre = null;
     }
