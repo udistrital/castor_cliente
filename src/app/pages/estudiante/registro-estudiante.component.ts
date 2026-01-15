@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core'; // 👈 quitamos "signal"
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -15,6 +16,7 @@ import { TokenService } from 'src/app/@core/services/auth/token.service';
 import { EstudiantesService } from 'src/app/@core/services/estudiantes.service';
 import { GlobalLoadingOverlayComponent } from 'src/app/@shared/components/global-loading-overlay.component';
 import { DocumentosService } from 'src/app/@core/services/documentos.service';
+import { UserContextService } from 'src/app/@core/services/user-context.service';
 
 @Component({
   selector: 'app-registro-estudiante',
@@ -60,31 +62,45 @@ export class RegistroEstudianteComponent implements OnInit {
     private alert: AlertService,
     private loading: LoadingService,
     private token: TokenService,
+    private userContext: UserContextService,
     private estudiantes: EstudiantesService,
     private documentos: DocumentosService,
     private router: Router,
   ) {}
 
   async ngOnInit() {
+    this.loading.hide();
     const ctx = this.readJson('castor_estudiante_ctx');
 
     this.nombre = ctx?.nombre || this.token.currentUser?.email || '';
     this.codigo = ctx?.codigo || this.token.codigo || '';
     this.documento = ctx?.documento || this.token.documento || '';
     this.pcId = String(ctx?.carrera || '');
+    this.userContext.setEstudianteContext({
+      nombre: this.nombre,
+      codigo: this.codigo,
+      documento: this.documento || undefined,
+      carrera: ctx?.carrera,
+      tercero_id: ctx?.tercero_id,
+    });
 
     if (this.pcId) {
       this.loading.show('Resolviendo proyecto curricular…');
-      this.catalogos.getNombreProyectoCurricular(this.pcId).subscribe({
-        next: (nombre) => {
-          this.pcNombre = nombre;
-          this.loading.hide();
-        },
-        error: () => {
-          this.pcNombre = null;
-          this.loading.hide();
-        },
-      });
+      this.catalogos
+        .getNombreProyectoCurricular(this.pcId)
+        .pipe(finalize(() => this.loading.hide()))
+        .subscribe({
+          next: (nombre) => {
+            this.pcNombre = nombre;
+          },
+          error: () => {
+            this.pcNombre = null;
+          },
+        });
+    }
+
+    if (!this.getTerceroIdFromContext()) {
+      await this.resolveTerceroIdFromDocumento(false);
     }
   }
 
@@ -128,23 +144,36 @@ export class RegistroEstudianteComponent implements OnInit {
       return;
     }
 
-    const payload: {
-      tercero_id?: number;
-      proyecto_curricular_id: number;
-      resumen: string | undefined;
-      habilidades: string | undefined;
-      cv_documento_id: string;
-      visible: boolean;
-      tratamiento_datos_aceptado?: boolean;
-    } = {
-      proyecto_curricular_id: Number(this.pcId || 0),
-      resumen: this.form.value.resumen?.trim(),
-      habilidades: this.form.value.habilidades?.trim(),
-      cv_documento_id: '',
-      visible: true,
-    };
-
     try {
+      let terceroId = this.getTerceroIdFromContext();
+      if (!terceroId) {
+        terceroId = await this.resolveTerceroIdFromDocumento(false);
+      }
+      if (!terceroId) {
+        this.alert.info(
+          'Información incompleta',
+          'No pudimos identificar tu tercero_id. Actualiza la página e intenta nuevamente.',
+        );
+        return;
+      }
+      const payload: {
+        tercero_id: number;
+        proyecto_curricular_id: number;
+        resumen: string | undefined;
+        habilidades: string | undefined;
+        cv_documento_id: string;
+        visible: boolean;
+        tratamiento_datos_aceptado: boolean;
+      } = {
+        tercero_id: terceroId,
+        proyecto_curricular_id: Number(this.pcId || 0),
+        resumen: this.form.value.resumen?.trim(),
+        habilidades: this.form.value.habilidades?.trim(),
+        cv_documento_id: '',
+        visible: true,
+        tratamiento_datos_aceptado: this.form.value.tratamientoDatosAceptado === true,
+      };
+
       this.loading.show('Subiendo hoja de vida…');
       const nombreArchivo = `CV_${this.codigo || this.documento || 'estudiante'}.pdf`;
       const enlace = await firstValueFrom(
@@ -152,19 +181,7 @@ export class RegistroEstudianteComponent implements OnInit {
       );
       payload.cv_documento_id = enlace;
 
-      const ultimoRaw = localStorage.getItem('castor_ultimo_check');
-      const ultimo = ultimoRaw ? JSON.parse(ultimoRaw) : null;
-      const terceroId =
-        typeof ultimo?.tercero_id === 'number' ? ultimo.tercero_id : null;
-
-      if (terceroId !== null) {
-        payload.tercero_id = terceroId;
-      }
-
       this.loading.show('Registrando perfil…');
-      if (this.form.value.tratamientoDatosAceptado === true) {
-        payload.tratamiento_datos_aceptado = true;
-      }
       await firstValueFrom(this.estudiantes.crearPerfil(payload));
       this.loading.hide();
 
@@ -192,6 +209,67 @@ export class RegistroEstudianteComponent implements OnInit {
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
     } catch {
+      return null;
+    }
+  }
+
+  private getTerceroIdFromContext(): number | null {
+    const storedCtx = this.readJson('castor_estudiante_ctx');
+    const serviceCtx = this.userContext.getEstudianteContext();
+    const terceroId = serviceCtx?.tercero_id ?? storedCtx?.tercero_id ?? null;
+    if (typeof terceroId !== 'number' || !Number.isFinite(terceroId) || terceroId <= 0) {
+      return null;
+    }
+    return terceroId;
+  }
+
+  private persistTerceroId(terceroId: number): void {
+    const currentCtx = this.readJson('castor_estudiante_ctx') || {};
+    localStorage.setItem(
+      'castor_estudiante_ctx',
+      JSON.stringify({ ...currentCtx, tercero_id: terceroId }),
+    );
+    this.userContext.setEstudianteContext({ tercero_id: terceroId, nombre: this.nombre, codigo: this.codigo });
+  }
+
+  private async resolveTerceroIdFromDocumento(showErrors: boolean): Promise<number | null> {
+    const documento = this.documento || this.token.documento || '';
+    if (!documento) {
+      if (showErrors) {
+        this.alert.error(
+          'Validación incompleta',
+          'No pudimos identificar tu número de documento. Inicia sesión nuevamente.',
+        );
+      }
+      return null;
+    }
+
+    try {
+      const resp = await firstValueFrom(this.estudiantes.consultarPorDocumento(String(documento)));
+      const terceroId = typeof resp?.tercero_id === 'number' ? resp.tercero_id : null;
+      if (terceroId && terceroId > 0) {
+        this.persistTerceroId(terceroId);
+        return terceroId;
+      }
+      if (showErrors) {
+        const mensajeRaw =
+          resp?.relacionado === false
+            ? resp?.mensaje || ''
+            : '';
+        const mensajeLower = mensajeRaw.toLowerCase();
+        const esErrorTerceros =
+          mensajeLower.includes('terceros') ||
+          mensajeLower.includes('no se encuentra registrado en terceros');
+        const mensaje = esErrorTerceros
+          ? (mensajeRaw || 'No se pudo identificar el tercero asociado a tu documento.')
+          : 'No se pudo identificar el tercero asociado a tu documento.';
+        this.alert.error('Validación de tercero', mensaje);
+      }
+      return null;
+    } catch (error) {
+      if (showErrors) {
+        this.alert.error('Error', 'No fue posible validar tu información en terceros.');
+      }
       return null;
     }
   }

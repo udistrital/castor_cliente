@@ -69,7 +69,7 @@ export class CheckComponent implements OnInit {
     console.log('[CHECK] ids →', { documento, codigo, roles });
 
     // Contexto base (principalmente para estudiante)
-    const baseCtx = { documento, codigo, nombre: '', carrera: '' };
+    const baseCtx = { documento, codigo, nombre: '', carrera: '', tercero_id: null as number | null };
     localStorage.setItem('castor_estudiante_ctx', JSON.stringify(baseCtx));
 
     // Priorización de rol (evita edge-case donde un tutor también tenga ESTUDIANTE por algún motivo)
@@ -136,17 +136,17 @@ export class CheckComponent implements OnInit {
           const carrera = (aca as any)?.Carrera || '';
           localStorage.setItem(
             'castor_estudiante_ctx',
-            JSON.stringify({ documento, codigo, nombre: nombre || '', carrera: carrera || '' })
+            JSON.stringify({ documento, codigo, nombre: nombre || '', carrera: carrera || '', tercero_id: terceroId || null })
           );
         } catch {
-          localStorage.setItem('castor_estudiante_ctx', JSON.stringify({ documento, codigo, nombre: '', carrera: '' }));
+          localStorage.setItem('castor_estudiante_ctx', JSON.stringify({ documento, codigo, nombre: '', carrera: '', tercero_id: terceroId || null }));
         } finally {
           this.loading.hide();
           this.router.navigateByUrl('/pages/home');
           sessionStorage.removeItem(this.runningKey);
         }
       } else {
-        localStorage.setItem('castor_estudiante_ctx', JSON.stringify({ documento, codigo, nombre: '', carrera: '' }));
+        localStorage.setItem('castor_estudiante_ctx', JSON.stringify({ documento, codigo, nombre: '', carrera: '', tercero_id: terceroId || null }));
         this.router.navigateByUrl('/pages/home');
         sessionStorage.removeItem(this.runningKey);
       }
@@ -193,7 +193,8 @@ export class CheckComponent implements OnInit {
       nombre: (aca as any).Nombre,
       codigo,
       carrera: (aca as any).Carrera,
-      documento
+      documento,
+      tercero_id: terceroId || null
     }));
 
     this.router.navigateByUrl('/pages/registro');

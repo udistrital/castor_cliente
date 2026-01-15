@@ -27,13 +27,7 @@
           <div class="info-card">
             <div class="label">Proyecto Curricular</div>
             <div class="value">
-              <ng-container *ngIf="ctxPcNombre; else pcFallback">
-                {{ ctxPcNombre }}
-              </ng-container>
-              <ng-template #pcFallback>
-                {{ ctxPcId || '—' }}
-                <small class="muted" *ngIf="ctxPcId">(provisional)</small>
-              </ng-template>
+              {{ pcNombre || '—' }}
             </div>
           </div>
         </div>
@@ -55,12 +49,12 @@
             <h4>Habilidades</h4>
           </div>
           <ng-container *ngIf="habilidadesList.length; else habilidadesVacias">
-  <div class="chip-row">
-    <mat-chip *ngFor="let hab of habilidadesList">
-      {{ hab }}
-    </mat-chip>
-  </div>
-</ng-container>
+            <div class="chip-row">
+              <mat-chip *ngFor="let hab of habilidadesList">
+                {{ hab }}
+              </mat-chip>
+            </div>
+          </ng-container>
 
 
           <ng-template #habilidadesVacias>

@@ -27,6 +27,7 @@ export const environment = {
     polux: 'http://<HOST_POLUX>/v1/',
     gestor_doc_mid: 'http://<HOST_GESTOR_DOC_MID>/v1/',
     oikos: 'http://<HOST_OIKOS>/v2/',
+    dependencias_api: 'http://<HOST_OIKOS>/v2/',
     castor_crud: 'http://localhost:8081/v1/',
   },
   TOKEN: {

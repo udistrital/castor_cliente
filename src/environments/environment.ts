@@ -31,6 +31,7 @@ export const environment = {
     polux: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/polux_crud/v1/',
     gestor_doc_mid: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/gestor_documental_mid/v1',
     oikos: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/oikos_crud_api/v2/',
+    dependencias_api: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/oikos_crud_api/v2/',
     castor_crud: 'http://localhost:8081/v1/', 
   },
   TOKEN: {
