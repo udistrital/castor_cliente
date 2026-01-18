@@ -17,6 +17,27 @@ const routes: Routes = [{
       loadComponent: () => import('./estudiante/home-estudiante.component').then(m => m.HomeEstudianteComponent),
     },
     {
+      path: 'estudiante',
+      children: [
+        {
+          path: 'ofertas',
+          loadComponent: () => import('./estudiante/ofertas/ofertas-disponibles.component').then(m => m.OfertasDisponiblesComponent),
+        },
+        {
+          path: 'invitaciones',
+          loadComponent: () => import('./estudiante/invitaciones/invitaciones-estudiante.component').then(m => m.InvitacionesEstudianteComponent),
+        },
+        {
+          path: 'postulaciones',
+          loadComponent: () => import('./estudiante/postulaciones/mis-postulaciones.component').then(m => m.MisPostulacionesComponent),
+        },
+        {
+          path: 'actualizar-cv',
+          loadComponent: () => import('./estudiante/perfil/actualizar-cv.component').then(m => m.ActualizarCvComponent),
+        },
+      ],
+    },
+    {
       path: 'registro',
       loadComponent: () => import('./estudiante/registro-estudiante.component').then(m => m.RegistroEstudianteComponent),
     },

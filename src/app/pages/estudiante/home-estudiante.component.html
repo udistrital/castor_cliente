@@ -2,6 +2,7 @@
 
 <div class="home-shell">
   <mat-card class="home-card">
+
     <mat-card-header>
       <div mat-card-avatar class="avatar">
         <span>{{ (ctxNombre || ctxCodigo || 'E').slice(0, 1) | uppercase }}</span>
@@ -11,32 +12,70 @@
     </mat-card-header>
 
     <mat-card-content>
+
+      <!-- Datos del estudiante -->
       <section class="section datos">
         <div class="section-header">
           <h3>Datos del estudiante</h3>
         </div>
+
         <div class="datos-grid">
           <div class="info-card">
             <div class="label">Nombre</div>
             <div class="value">{{ ctxNombre || '—' }}</div>
           </div>
+
           <div class="info-card">
             <div class="label">Código</div>
             <div class="value">{{ ctxCodigo || '—' }}</div>
           </div>
+
           <div class="info-card">
             <div class="label">Proyecto Curricular</div>
-            <div class="value">
-              {{ pcNombre || '—' }}
-            </div>
+            <div class="value">{{ pcNombre || '—' }}</div>
           </div>
         </div>
       </section>
 
+      <!-- KPIs -->
+      <section class="section">
+        <div class="section-header">
+          <h3>Resumen</h3>
+        </div>
+
+        <div class="datos-grid">
+          <div class="info-card kpi">
+            <div class="label">Ofertas disponibles</div>
+            <div class="value">{{ kpiOfertas }}</div>
+            <button mat-stroked-button color="primary" (click)="goToOfertas()">
+              Ver ofertas
+            </button>
+          </div>
+
+          <div class="info-card kpi">
+            <div class="label">Invitaciones</div>
+            <div class="value">{{ kpiInvitaciones }}</div>
+            <button mat-stroked-button color="primary" (click)="goToInvitaciones()">
+              Ver invitaciones
+            </button>
+          </div>
+
+          <div class="info-card kpi">
+            <div class="label">Mis postulaciones</div>
+            <div class="value">{{ kpiPostulaciones }}</div>
+            <button mat-stroked-button color="primary" (click)="goToPostulaciones()">
+              Ver postulaciones
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Perfil profesional -->
       <section class="section">
         <div class="section-header">
           <h3>Perfil profesional</h3>
         </div>
+
         <p class="resumen" *ngIf="perfil?.resumen; else resumenVacio">
           {{ perfil?.resumen }}
         </p>
@@ -48,14 +87,12 @@
           <div class="section-header sub">
             <h4>Habilidades</h4>
           </div>
+
           <ng-container *ngIf="habilidadesList.length; else habilidadesVacias">
             <div class="chip-row">
-              <mat-chip *ngFor="let hab of habilidadesList">
-                {{ hab }}
-              </mat-chip>
+              <mat-chip *ngFor="let hab of habilidadesList">{{ hab }}</mat-chip>
             </div>
           </ng-container>
-
 
           <ng-template #habilidadesVacias>
             <p class="muted">Aún no registras habilidades.</p>
@@ -63,39 +100,54 @@
         </div>
       </section>
 
+      <!-- Postulaciones por estado -->
       <section class="section">
         <div class="section-header">
-          <h3>Siguientes pasos</h3>
+          <h3>Postulaciones por estado</h3>
         </div>
-        <ul class="steps">
-          <li>
-            <mat-icon>search</mat-icon>
-            Buscar ofertas de pasantía disponibles
-          </li>
-          <li>
-            <mat-icon>send</mat-icon>
-            Postularte a una oferta
-          </li>
-          <li>
-            <mat-icon>description</mat-icon>
-            Actualizar tu hoja de vida
-          </li>
-        </ul>
+
+        <ng-container *ngIf="chipsPostulacionesPorEstado.length; else postulacionesVacias">
+          <div class="chip-row">
+            <mat-chip *ngFor="let item of chipsPostulacionesPorEstado">
+              {{ item.estado }} · {{ item.total }}
+            </mat-chip>
+          </div>
+        </ng-container>
+
+        <ng-template #postulacionesVacias>
+          <p class="muted">Aún no registras postulaciones.</p>
+        </ng-template>
+
+        <button mat-stroked-button color="primary" (click)="goToPostulaciones()">
+          Ver mis postulaciones
+        </button>
       </section>
 
-      <section class="section" *ngIf="perfil?.cv_documento_id">
-        <div class="section-header sub">
-          <h4>Hoja de vida</h4>
+      <!-- Hoja de vida -->
+      <section class="section">
+        <div class="section-header">
+          <h3>Hoja de vida</h3>
         </div>
-        <a
-          class="link"
-          [href]="buildCvLink(perfil?.cv_documento_id || '')"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Ver PDF adjunto
-        </a>
+
+        <div class="flex gap-3 flex-wrap">
+          <button mat-stroked-button color="primary" (click)="goToActualizarCv()">
+            Actualizar hoja de vida
+          </button>
+
+          <button
+            *ngIf="perfil?.cv_documento_id"
+            mat-stroked-button
+            (click)="verPdfAdjunto()"
+          >
+            Ver PDF adjunto
+          </button>
+        </div>
+
+        <p class="muted" *ngIf="!perfil?.cv_documento_id">
+          Aún no has adjuntado una hoja de vida.
+        </p>
       </section>
+
     </mat-card-content>
   </mat-card>
 </div>

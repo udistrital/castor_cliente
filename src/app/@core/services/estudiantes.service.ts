@@ -58,4 +58,21 @@ export class EstudiantesService {
       .get<ApiEnvelope<PerfilEstudiante>>('castor_mid', 'estudiantes/perfil', { tercero_id })
       .pipe(map((res) => res?.Data ?? null));
   }
+
+  updateCvDocumentoId(terceroId: number, cvDocumentoId: string): Observable<any> {
+  // ✅ Este endpoint es el único que puede variar según cómo lo dejaste en castor_mid.
+  // Si te da 404, cambia SOLO el path 'estudiantes/perfil/cv' por el endpoint real.
+  return this.requestManager.castorMidPut(
+    'estudiantes/perfil/cv',
+    {
+      tercero_id: terceroId,
+      cv_documento_id: cvDocumentoId,
+    },
+  );
 }
+
+}
+
+// Dentro de EstudiantesService (class EstudiantesService { ... })
+
+

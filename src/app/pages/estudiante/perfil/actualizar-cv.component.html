@@ -1,0 +1,41 @@
+<mat-card class="cv-card">
+  <mat-card-title>Actualizar hoja de vida</mat-card-title>
+
+  <div class="actions-top">
+    <button mat-stroked-button type="button" (click)="cancelar()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="verCvActual()"
+      [disabled]="!cvActualId"
+    >
+      <mat-icon>picture_as_pdf</mat-icon>
+      Ver PDF actual
+    </button>
+  </div>
+
+  <input type="file" accept="application/pdf,.pdf" (change)="onFileSelected($event)" />
+
+  <div class="muted" *ngIf="archivo; else nofile">
+    Archivo seleccionado: <b>{{ archivo?.name }}</b>
+  </div>
+
+  <ng-template #nofile>
+    <div class="muted">Selecciona un PDF para actualizar tu hoja de vida.</div>
+  </ng-template>
+
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="actualizar()"
+    [disabled]="subiendo || !archivo"
+  >
+    <mat-icon>upload</mat-icon>
+    {{ subiendo ? 'Actualizando…' : 'Actualizar' }}
+  </button>
+</mat-card>

@@ -1,0 +1,31 @@
+.cv-shell {
+  padding: 24px;
+}
+
+.cv-card {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.actions-top {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 12px 0 16px;
+}
+
+.file-row {
+  margin: 8px 0 12px;
+}
+
+.actions-bottom {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.muted {
+  opacity: 0.75;
+  margin-top: 6px;
+}
