@@ -1,11 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { Router, RouterModule } from '@angular/router';
+import { firstValueFrom, of } from 'rxjs';
+import { catchError, take } from 'rxjs/operators';
 import Swal from 'sweetalert2';
+
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatButtonModule } from '@angular/material/button';
+
 import { GlobalLoadingOverlayComponent } from '../../@shared/components/global-loading-overlay.component';
 import { TokenService } from '../../@core/services/auth/token.service';
 import { LoadingService } from '../../@core/services/ui/loading.service';
@@ -13,10 +17,15 @@ import { EstudiantesService } from '../../@core/services/estudiantes.service';
 import { UserContextService } from '../../@core/services/user-context.service';
 import { PerfilEstudiante } from '../../@core/models/perfil.model';
 import { AcademicService } from 'src/app/@core/services/academica/academic.service';
-import { take } from 'rxjs/operators';
-import { of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
+import { OfertasEstudianteService } from 'src/app/@core/services/ofertas-estudiante.service';
+import { InvitacionesEstudianteService } from 'src/app/@core/services/invitaciones-estudiante.service';
+import { DocumentosService } from 'src/app/@core/services/documentos.service';
+
+import {
+  EstudianteDashboardService,
+  EstudianteDashboardResumen,
+} from 'src/app/@core/services/estudiante-dashboard.service';
 
 @Component({
   standalone: true,
@@ -27,6 +36,7 @@ import { catchError } from 'rxjs/operators';
     MatCardModule,
     MatIconModule,
     MatChipsModule,
+    MatButtonModule,
     GlobalLoadingOverlayComponent,
   ],
   templateUrl: './home-estudiante.component.html',
@@ -34,8 +44,16 @@ import { catchError } from 'rxjs/operators';
 })
 export class HomeEstudianteComponent implements OnInit {
   perfil: PerfilEstudiante | null = null;
+
+  kpiOfertas = 0;
+  kpiInvitaciones = 0;
+  kpiPostulaciones = 0;
+
+  chipsPostulacionesPorEstado: Array<{ estado: string; total: number }> = [];
+
   pcNombre = '';
   codigoEstudiante = '';
+
   ctxNombre = '';
   ctxCodigo = '';
   ctxPcId = '';
@@ -47,11 +65,17 @@ export class HomeEstudianteComponent implements OnInit {
     private estudiantes: EstudiantesService,
     private userContext: UserContextService,
     private academica: AcademicService,
+    private dashboardService: EstudianteDashboardService,
+    private router: Router,
+    private ofertasService: OfertasEstudianteService,
+    private invitacionesService: InvitacionesEstudianteService,
+    private docs: DocumentosService,
   ) {}
 
   ngOnInit(): void {
     this.bootstrapContext();
     this.loadPerfil();
+    this.loadDashboard();
   }
 
   private async loadPerfil(): Promise<void> {
@@ -93,9 +117,7 @@ export class HomeEstudianteComponent implements OnInit {
 
       this.loading.hide();
 
-      if (!this.perfil) {
-        return;
-      }
+      if (!this.perfil) return;
 
       const pcNombre =
         this.perfil?.proyecto_curricular_nombre ||
@@ -103,12 +125,64 @@ export class HomeEstudianteComponent implements OnInit {
         (this.perfil?.proyecto_curricular_id
           ? `Proyecto curricular #${this.perfil.proyecto_curricular_id}`
           : 'Proyecto curricular sin especificar');
+
       this.pcNombre = pcNombre;
       this.ctxPcNombre = pcNombre;
+
     } catch (error) {
       console.error('[HOME ESTUDIANTE] Error cargando perfil', error);
       this.loading.hide();
       Swal.fire('Error', 'No pudimos cargar tu perfil. Intenta más tarde.', 'error');
+    }
+  }
+
+  private async loadDashboard(): Promise<void> {
+    try {
+      const stored = this.readJson('castor_estudiante_ctx');
+      const ctx = this.userContext.getEstudianteContext();
+      const currentUser = this.token.currentUser as any;
+
+      const terceroId =
+        ctx?.tercero_id ??
+        stored?.tercero_id ??
+        currentUser?.rawTokenPayload?.tercero_id ??
+        currentUser?.tercero_id ??
+        null;
+
+      const estudianteId = Number(terceroId);
+      if (!Number.isFinite(estudianteId) || estudianteId <= 0) return;
+
+      const dashboard = await firstValueFrom(this.dashboardService.getDashboard(estudianteId));
+      const resumen: EstudianteDashboardResumen | undefined = dashboard?.resumen;
+
+      const postulacionesPorEstado =
+        resumen?.postulaciones_por_estado ?? (resumen as any)?.postulaciones;
+
+      this.chipsPostulacionesPorEstado = this.normalizePostulacionesPorEstado(postulacionesPorEstado);
+
+      this.kpiPostulaciones = this.chipsPostulacionesPorEstado.reduce(
+        (acc, x) => acc + (x.total ?? 0),
+        0,
+      );
+
+      // Ofertas (paginación 1, tamaño 1 para traer total)
+      const ofertasResp = await firstValueFrom(
+        this.ofertasService
+          .getDisponibles(estudianteId, 1, 1)
+          .pipe(catchError(() => of({ items: [], total: 0, page: 1, size: 1 }))),
+      );
+      this.kpiOfertas = ofertasResp.total;
+
+      // Invitaciones (paginación 1, tamaño 1 para traer total)
+      const invitResp = await firstValueFrom(
+        this.invitacionesService
+          .getBandeja(estudianteId, undefined, 1, 1)
+          .pipe(catchError(() => of({ items: [], total: 0, page: 1, size: 1 }))),
+      );
+      this.kpiInvitaciones = invitResp.total;
+
+    } catch (error) {
+      console.warn('[HOME ESTUDIANTE] No se pudo cargar el dashboard', error);
     }
   }
 
@@ -118,7 +192,6 @@ export class HomeEstudianteComponent implements OnInit {
     this.ctxCodigo = ctx?.codigo || this.token.codigo || '';
     this.ctxPcId = ctx?.carrera ? String(ctx.carrera) : '';
 
-    // Si el contexto no trae nombre (y tenemos código), lo traemos desde Académica
     if ((!this.ctxNombre || this.ctxNombre.includes('@')) && this.ctxCodigo) {
       this.academica
         .getDatosEstudiantePorCodigo(this.ctxCodigo)
@@ -130,13 +203,8 @@ export class HomeEstudianteComponent implements OnInit {
           const nombre = data?.Nombre?.trim();
           if (nombre) {
             this.ctxNombre = nombre;
-
-            // opcional: persistir para no pedirlo cada vez
             const currentCtx = this.readJson('castor_estudiante_ctx') || {};
-            localStorage.setItem(
-              'castor_estudiante_ctx',
-              JSON.stringify({ ...currentCtx, nombre }),
-            );
+            localStorage.setItem('castor_estudiante_ctx', JSON.stringify({ ...currentCtx, nombre }));
           }
         });
     }
@@ -153,25 +221,75 @@ export class HomeEstudianteComponent implements OnInit {
     }
   }
 
-  buildCvLink(id: string | number | null | undefined): string | null {
-    if (!id) {
-      return null;
+  // ✅ NUEVO: abrir PDF adjunto (Gestor Documental)
+  async verPdfAdjunto(): Promise<void> {
+    try {
+      const docId = (this.perfil as any)?.cv_documento_id;
+      if (!docId) {
+        Swal.fire('Sin hoja de vida', 'Aún no tienes un PDF adjunto.', 'info');
+        return;
+      }
+      this.loading.show('Abriendo PDF…');
+
+      await firstValueFrom(
+        this.docs.openPdfByDocumentoId(docId).pipe(
+          catchError((e) => {
+            console.error('[CV] Error abriendo PDF', e);
+            return of(void 0);
+          }),
+        ),
+      );
+
+      this.loading.hide();
+    } catch (e) {
+      console.error('[CV] Error general abriendo PDF', e);
+      this.loading.hide();
+      Swal.fire('Error', 'No fue posible abrir el PDF.', 'error');
     }
-    return `#cv/${id}`;
+  }
+
+  goToOfertas(): void {
+    this.router.navigateByUrl('/pages/estudiante/ofertas');
+  }
+
+  goToInvitaciones(): void {
+    this.router.navigateByUrl('/pages/estudiante/invitaciones');
+  }
+
+  goToPostulaciones(): void {
+    this.router.navigateByUrl('/pages/estudiante/postulaciones');
+  }
+
+  goToActualizarCv(): void {
+    this.router.navigateByUrl('/pages/estudiante/actualizar-cv');
   }
 
   get habilidadesList(): string[] {
-  const h: any = this.perfil?.habilidades;
+    const h: any = this.perfil?.habilidades;
+    if (!h) return [];
 
-  if (!h) return [];
-
-  const list = Array.isArray(h)
-    ? h
-    : String(h).split(',');
-
-  return list
-    .map((x) => String(x ?? '').trim())
-    .filter((x) => x.length > 0);
+    const list = Array.isArray(h) ? h : String(h).split(',');
+    return list
+      .map((x) => String(x ?? '').trim())
+      .filter((x) => x.length > 0);
   }
 
+  private normalizePostulacionesPorEstado(
+    value: EstudianteDashboardResumen['postulaciones_por_estado'],
+  ): Array<{ estado: string; total: number }> {
+    if (!value) return [];
+
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => ({
+          estado: String(item?.estado ?? ''),
+          total: Number(item?.total ?? 0),
+        }))
+        .filter((item) => item.estado);
+    }
+
+    return Object.entries(value)
+      .map(([estado, total]) => ({ estado, total: Number(total ?? 0) }))
+      .filter((item) => item.estado);
+  }
 }

@@ -1,0 +1,43 @@
+<mat-card class="card">
+  <mat-card-title>Mis invitaciones</mat-card-title>
+
+  <mat-card-content>
+    <div *ngIf="cargando" class="muted">Cargando invitaciones…</div>
+
+    <ng-container *ngIf="!cargando && invitaciones.length; else invitacionesVacias">
+      <div class="list">
+        <mat-card class="item" *ngFor="let inv of invitaciones">
+          <mat-card-content>
+            <div class="row">
+              <div class="col">
+                <div class="title">{{ inv.oferta || ('Invitación #' + inv.id) }}</div>
+                <div class="muted">{{ inv.mensaje || '—' }}</div>
+                <div class="meta">
+                  <span class="chip">{{ inv.estado || '—' }}</span>
+                  <span class="muted" *ngIf="inv.fecha">· {{ inv.fecha }}</span>
+                </div>
+              </div>
+
+              <div class="actions">
+                <button mat-stroked-button color="primary" (click)="aceptar(inv.id)">
+                  Aceptar
+                </button>
+                <button mat-stroked-button color="warn" (click)="rechazar(inv.id)">
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div class="muted" style="margin-top: 8px;">
+        Total: {{ total }}
+      </div>
+    </ng-container>
+
+    <ng-template #invitacionesVacias>
+      <p class="muted">No tienes invitaciones.</p>
+    </ng-template>
+  </mat-card-content>
+</mat-card>

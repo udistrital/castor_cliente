@@ -1,0 +1,33 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Ofertas disponibles</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div *ngIf="cargando" class="muted">Cargando ofertas…</div>
+    <ng-container *ngIf="!cargando && ofertas.length; else ofertasVacias">
+      <div class="ofertas-grid">
+        <mat-card class="oferta-card" *ngFor="let oferta of ofertas">
+          <mat-card-header>
+            <mat-card-title>{{ oferta.titulo || 'Oferta' }}</mat-card-title>
+            <mat-card-subtitle>{{ oferta.estado_det || '—' }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <p class="descripcion">{{ oferta.descripcion || 'Sin descripción.' }}</p>
+            <p class="muted" *ngIf="oferta.empresa_id">Empresa: {{ oferta.empresa_id }}</p>
+            <p class="muted" *ngIf="oferta.fecha_publicacion">
+              Publicada: {{ oferta.fecha_publicacion }}
+            </p>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-stroked-button color="primary" (click)="postularme(oferta.id)">
+              Postularme
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </ng-container>
+    <ng-template #ofertasVacias>
+      <p class="muted">Sin ofertas para mostrar por ahora.</p>
+    </ng-template>
+  </mat-card-content>
+</mat-card>
