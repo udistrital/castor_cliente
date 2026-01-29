@@ -6,23 +6,37 @@
 
     <ng-container *ngIf="!cargando && invitaciones.length; else invitacionesVacias">
       <div class="list">
-        <mat-card class="item" *ngFor="let inv of invitaciones">
+        <mat-card class="item" *ngFor="let inv of invitaciones" (click)="goDetalle(inv.id)">
           <mat-card-content>
             <div class="row">
               <div class="col">
-                <div class="title">{{ inv.oferta || ('Invitación #' + inv.id) }}</div>
+                <!-- ✅ Título: oferta -->
+                <div class="title">
+                  {{
+                    inv?.oferta_resumen?.titulo
+                      || inv?.oferta
+                      || ('Oferta #' + (inv?.oferta_pasantia_id ?? inv?.id))
+                  }}
+                </div>
+
+                <!-- ✅ Mensaje -->
                 <div class="muted">{{ inv.mensaje || '—' }}</div>
+
+                <!-- ✅ Meta: estado + fecha -->
                 <div class="meta">
-                  <span class="chip">{{ inv.estado || '—' }}</span>
-                  <span class="muted" *ngIf="inv.fecha">· {{ inv.fecha }}</span>
+                  <span class="chip">
+                    {{ inv?.estado_det?.nombre || inv?.estado || '—' }}
+                  </span>
+
+                  <span class="muted" *ngIf="inv.fecha">· {{ displayFecha(inv.fecha) }}</span>
                 </div>
               </div>
 
               <div class="actions">
-                <button mat-stroked-button color="primary" (click)="aceptar(inv.id)">
+                <button mat-stroked-button color="primary" (click)="aceptar(inv.id, $event)">
                   Aceptar
                 </button>
-                <button mat-stroked-button color="warn" (click)="rechazar(inv.id)">
+                <button mat-stroked-button color="warn" (click)="rechazar(inv.id, $event)">
                   Rechazar
                 </button>
               </div>

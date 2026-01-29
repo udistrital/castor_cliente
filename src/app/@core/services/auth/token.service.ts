@@ -38,6 +38,7 @@ export class TokenService {
       this.migrateLegacyTokensIfPresent();
       this.bootstrapFromStorage();
       this.handleImplicitCallback();
+      this.handlePostLogout();
     });
   }
 
@@ -137,22 +138,68 @@ export class TokenService {
   }
 
   logout(): void {
-    const idToken = this.currentTokens?.idToken;
+    const idToken =
+      localStorage.getItem('id_token') ||
+      (this.currentUser as any)?.id_token ||
+      (this.currentUser as any)?.rawIdToken ||
+      this.currentTokens?.idToken ||
+      '';
+
+    const state = this.generateRandomToken();
+    localStorage.setItem('oidc_logout_state', state);
+
+    const url = this.buildLogoutUrl(idToken, state);
+
+    // Limpieza segura de storage
     this.clearSession();
-
-    if (!TOKEN_CONFIG.SIGN_OUT_URL) {
-      window.location.href = TOKEN_CONFIG.SIGN_OUT_REDIRECT_URL;
-      return;
+    try {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('id_token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('castor_estudiante_ctx');
+      localStorage.removeItem('castor_tutor_ctx');
+      localStorage.removeItem('castor_admin_ctx');
+      localStorage.removeItem('castor_convocatoria_ctx');
+      localStorage.removeItem('castor_tercero_ctx');
+      localStorage.removeItem('state');
+      localStorage.removeItem('nonce');
+    } catch {
+      // noop
     }
 
-    const url = new URL(TOKEN_CONFIG.SIGN_OUT_URL);
-    if (idToken) {
-      url.searchParams.set('id_token_hint', idToken);
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (key.startsWith('castor_') || key.startsWith(this.storagePrefix)) {
+          localStorage.removeItem(key);
+        }
+      }
+    } catch {
+      // noop
     }
-    if (TOKEN_CONFIG.SIGN_OUT_REDIRECT_URL) {
-      url.searchParams.set('post_logout_redirect_uri', TOKEN_CONFIG.SIGN_OUT_REDIRECT_URL);
+
+    try {
+      sessionStorage.clear();
+    } catch {
+      // noop
     }
-    window.location.href = url.toString();
+
+    window.location.replace(url);
+  }
+
+  handlePostLogout(): void {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const returnedState = params.get('state');
+      const expectedState = localStorage.getItem('oidc_logout_state');
+      if (returnedState && expectedState && returnedState === expectedState) {
+        localStorage.removeItem('oidc_logout_state');
+      }
+    } catch {
+      // noop
+    }
   }
 
   buildAuthHeaders(): HttpHeaders {
@@ -373,6 +420,21 @@ export class TokenService {
 
   private generateRandomToken(): string {
     return Math.random().toString(36).substring(2) + crypto.getRandomValues(new Uint32Array(1))[0].toString(36);
+  }
+
+  private buildLogoutUrl(idToken: string, state: string): string {
+    const oidcLogoutUrl =
+      environment.auth?.oidcLogoutUrl || TOKEN_CONFIG.SIGN_OUT_URL || '';
+    const postLogoutRedirectUri =
+      environment.auth?.postLogoutRedirectUri || TOKEN_CONFIG.SIGN_OUT_REDIRECT_URL || '';
+
+    const url = new URL(oidcLogoutUrl);
+    url.searchParams.set('id_token_hint', idToken);
+    if (postLogoutRedirectUri) {
+      url.searchParams.set('post_logout_redirect_uri', postLogoutRedirectUri);
+    }
+    url.searchParams.set('state', state);
+    return url.toString();
   }
 
   /** Lee posibles llaves legadas del widget OAS / cliente antiguo */

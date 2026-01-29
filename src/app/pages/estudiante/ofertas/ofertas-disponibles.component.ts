@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -25,6 +26,7 @@ export class OfertasDisponiblesComponent implements OnInit {
     private ofertasService: OfertasEstudianteService,
     private userContext: UserContextService,
     private token: TokenService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -50,18 +52,23 @@ export class OfertasDisponiblesComponent implements OnInit {
     console.warn('pendiente endpoint postular', ofertaId);
   }
 
+  goDetalle(id: number): void {
+    if (!id) return;
+    this.router.navigate(['/pages/estudiante/ofertas', id]);
+  }
+
   private resolveEstudianteId(): number | null {
     const ctx = this.userContext.getEstudianteContext();
     const currentUser = this.token.currentUser as any;
-    const estudianteIdRaw =
-      currentUser?.rawTokenPayload?.Codigo ??
-      currentUser?.Codigo ??
-      ctx?.codigo ??
+
+    const terceroId =
+      ctx?.tercero_id ??
+      currentUser?.rawTokenPayload?.tercero_id ??
+      currentUser?.tercero_id ??
       null;
-    const estudianteId = Number(estudianteIdRaw);
-    if (!Number.isFinite(estudianteId) || estudianteId <= 0) {
-      return null;
-    }
-    return estudianteId;
+
+    const id = Number(terceroId);
+    if (!Number.isFinite(id) || id <= 0) return null;
+    return id;
   }
 }

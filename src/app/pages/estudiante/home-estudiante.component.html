@@ -1,9 +1,9 @@
 <app-global-loading-overlay></app-global-loading-overlay>
 
-<div class="home-shell">
-  <mat-card class="home-card">
+<div class="home-shell bg">
+  <mat-card class="home-card elev">
 
-    <mat-card-header>
+    <mat-card-header class="home-header">
       <div mat-card-avatar class="avatar">
         <span>{{ (ctxNombre || ctxCodigo || 'E').slice(0, 1) | uppercase }}</span>
       </div>
@@ -11,10 +11,10 @@
       <mat-card-subtitle>Este es tu panel de estudiante en Castor.</mat-card-subtitle>
     </mat-card-header>
 
-    <mat-card-content>
+    <mat-card-content class="home-content">
 
       <!-- Datos del estudiante -->
-      <section class="section datos">
+      <section class="section card">
         <div class="section-header">
           <h3>Datos del estudiante</h3>
         </div>
@@ -38,13 +38,13 @@
       </section>
 
       <!-- KPIs -->
-      <section class="section">
+      <section class="section card">
         <div class="section-header">
           <h3>Resumen</h3>
         </div>
 
-        <div class="datos-grid">
-          <div class="info-card kpi">
+        <div class="datos-grid kpi-grid">
+          <div class="info-card kpi kpi-accent-1">
             <div class="label">Ofertas disponibles</div>
             <div class="value">{{ kpiOfertas }}</div>
             <button mat-stroked-button color="primary" (click)="goToOfertas()">
@@ -52,7 +52,7 @@
             </button>
           </div>
 
-          <div class="info-card kpi">
+          <div class="info-card kpi kpi-accent-2">
             <div class="label">Invitaciones</div>
             <div class="value">{{ kpiInvitaciones }}</div>
             <button mat-stroked-button color="primary" (click)="goToInvitaciones()">
@@ -60,7 +60,7 @@
             </button>
           </div>
 
-          <div class="info-card kpi">
+          <div class="info-card kpi kpi-accent-3">
             <div class="label">Mis postulaciones</div>
             <div class="value">{{ kpiPostulaciones }}</div>
             <button mat-stroked-button color="primary" (click)="goToPostulaciones()">
@@ -70,8 +70,39 @@
         </div>
       </section>
 
+      <!-- Pasantía activa -->
+      <section class="section card" *ngIf="pasanteActivo">
+        <div class="section-header">
+          <h3>Pasantía activa</h3>
+        </div>
+
+        <div class="label">
+          {{
+            pasantiaActiva?.titulo_oferta
+              || ('Oferta #' + (pasantiaActiva?.oferta_id ?? '—'))
+          }}
+        </div>
+
+        <p class="muted">
+          Actualmente tienes una pasantía activa. Tu perfil no se mostrará en búsquedas.
+        </p>
+
+        <div
+          class="chip-row chip-row-tight"
+          *ngIf="pasantiaActiva?.estado_postulacion_det?.nombre || pasantiaActiva?.estado_postulacion"
+        >
+          <mat-chip>
+            {{
+              pasantiaActiva?.estado_postulacion_det?.nombre
+                || pasantiaActiva?.estado_postulacion
+                || ''
+            }}
+          </mat-chip>
+        </div>
+      </section>
+
       <!-- Perfil profesional -->
-      <section class="section">
+      <section class="section card">
         <div class="section-header">
           <h3>Perfil profesional</h3>
         </div>
@@ -98,10 +129,45 @@
             <p class="muted">Aún no registras habilidades.</p>
           </ng-template>
         </div>
+
+        <div class="perfil-visibilidad">
+          <div class="section-header sub">
+            <h4>¿Quieres ser visible?</h4>
+
+            <mat-icon
+              class="hint-icon"
+              matTooltip="Si estás visible, tu perfil aparecerá en búsquedas de tutores externos. Si lo ocultas, no podrán encontrarte."
+              matTooltipPosition="above"
+              matTooltipShowDelay="250"
+            >
+              info
+            </mat-icon>
+          </div>
+
+          <p class="muted">
+            Controla si tu perfil aparece en búsquedas de tutores externos.
+          </p>
+
+          <mat-slide-toggle
+            [checked]="perfilVisible === true"
+            [disabled]="pasanteActivo"
+            (change)="onToggleVisibilidad($event.checked)"
+            [matTooltip]="pasanteActivo ? 'No puedes cambiar la visibilidad mientras tengas una pasantía activa.' : ''"
+            matTooltipPosition="above"
+            matTooltipShowDelay="200"
+          >
+            {{
+              pasanteActivo
+                ? 'Oculto por pasantía activa'
+                : (perfilVisible === true ? 'Visible' : 'Oculto')
+            }}
+          </mat-slide-toggle>
+        </div>
+        
       </section>
 
       <!-- Postulaciones por estado -->
-      <section class="section">
+      <section class="section card">
         <div class="section-header">
           <h3>Postulaciones por estado</h3>
         </div>
@@ -123,8 +189,172 @@
         </button>
       </section>
 
+      <!-- ✅ Invitaciones recientes -->
+      <section class="section card">
+        <div class="section-header">
+          <h3>Invitaciones recientes</h3>
+        </div>
+
+        <ng-container *ngIf="invitacionesRecientes?.length; else invitacionesRecientesVacias">
+          <div class="datos-grid">
+            <div class="info-card clickable" *ngFor="let inv of invitacionesRecientes" (click)="goToInvitacionDetalle(inv?.id)">
+              <!-- Título: Oferta (o fallback) -->
+              <div class="label">
+                {{
+                  inv?.oferta_resumen?.titulo
+                    || ('Oferta #' + (inv?.oferta_pasantia_id ?? '—'))
+                }}
+              </div>
+
+              <!-- Subtítulo: Empresa/Tutor si existen -->
+              <div class="muted" *ngIf="inv?.empresa || inv?.tutor">
+                {{ inv?.empresa ? ('Empresa: ' + inv.empresa) : '' }}
+                <span *ngIf="inv?.empresa && inv?.tutor"> · </span>
+                {{ inv?.tutor ? ('Tutor: ' + inv.tutor) : '' }}
+              </div>
+
+              <!-- Estado como chip -->
+              <div class="chip-row chip-row-tight" *ngIf="inv?.estado">
+                <mat-chip class="chip chip-estado" [ngClass]="'st-' + (inv?.estado_raw || inv?.estado || '').toLowerCase()">
+                  {{ inv.estado }}
+                </mat-chip>
+              </div>
+
+              <!-- Fecha -->
+              <div class="muted" *ngIf="inv?.fecha">
+                {{ displayFecha(inv.fecha) }}
+              </div>
+
+              <!-- Mensaje -->
+              <div class="muted line-clamp-2" *ngIf="inv?.mensaje">
+                {{ inv.mensaje }}
+              </div>
+
+              <div class="muted hint">
+                Click para ver detalle
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #invitacionesRecientesVacias>
+          <p class="muted">No tienes invitaciones recientes.</p>
+        </ng-template>
+
+        <button mat-stroked-button color="primary" (click)="goToInvitaciones()">
+          Ver invitaciones
+        </button>
+      </section>
+
+      <!-- ✅ Ofertas recomendadas -->
+      <section class="section card">
+        <div class="section-header">
+          <h3>Ofertas recomendadas</h3>
+        </div>
+
+        <ng-container *ngIf="ofertasRecomendadas?.length; else ofertasRecVacias">
+          <div class="datos-grid">
+            <div class="info-card clickable" *ngFor="let ofe of ofertasRecomendadas" (click)="goToOfertaDetalle(ofe?.id)">
+              <!-- Título -->
+              <div class="label">{{ displayOfertaTitulo(ofe) }}</div>
+
+              <!-- Subtítulo: Empresa -->
+              <div class="muted" *ngIf="ofe?.empresa || ofe?.nombre_empresa">
+                {{ (ofe?.empresa || ofe?.nombre_empresa) }}
+              </div>
+
+              <!-- Fecha publicación -->
+              <div class="muted" *ngIf="ofe?.fecha_publicacion">
+                Publicada: {{ displayFecha(ofe.fecha_publicacion) }}
+              </div>
+
+              <!-- Descripción -->
+              <div class="muted line-clamp-3" *ngIf="ofe?.descripcion">
+                {{ ofe.descripcion }}
+              </div>
+
+              <!-- Chips extra -->
+              <div class="chip-row chip-row-tight" *ngIf="ofe?.modalidad || ofe?.salario || ofe?.tipo_contrato">
+                <mat-chip *ngIf="ofe?.modalidad">{{ ofe.modalidad }}</mat-chip>
+                <mat-chip *ngIf="ofe?.tipo_contrato">{{ ofe.tipo_contrato }}</mat-chip>
+                <mat-chip *ngIf="ofe?.salario">{{ ofe.salario }}</mat-chip>
+              </div>
+
+              <div class="muted hint">
+                Click para ver ofertas
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #ofertasRecVacias>
+          <p class="muted">Aún no tenemos ofertas recomendadas para ti.</p>
+        </ng-template>
+
+        <button mat-stroked-button color="primary" (click)="goToOfertas()">
+          Ver ofertas
+        </button>
+      </section>
+
+      <!-- ✅ Quién ha visto tu perfil -->
+      <section class="section card">
+        <div class="section-header">
+          <h3>Quién ha visto tu perfil</h3>
+        </div>
+
+        <!-- Sin visitas -->
+        <p class="muted" *ngIf="(kpiVisitasPerfil ?? 0) === 0 && !(visitasPerfilRecientes?.length)">
+          Aún no tienes visitas registradas.
+        </p>
+
+        <!-- Con visitas -->
+        <ng-container *ngIf="(kpiVisitasPerfil ?? 0) > 0 || (visitasPerfilRecientes?.length)">
+          <p class="muted">
+            Total de visitas: <strong>{{ kpiVisitasPerfil || 0 }}</strong>
+            <span class="muted" *ngIf="kpiVisitasHoy > 0">
+              · Hoy: <strong>{{ kpiVisitasHoy }}</strong>
+            </span>
+          </p>
+
+          <div class="datos-grid" *ngIf="visitasPerfilRecientes?.length">
+            <div class="info-card">
+              <div class="label">Últimas visitas</div>
+              <div class="muted">Resumen por tutor/empresa</div>
+            </div>
+
+            <div class="info-card" *ngFor="let v of visitasPerfilRecientes">
+              <!-- Título: Empresa (principal) -->
+              <div class="label">
+                {{
+                  v?.empresa
+                    || v?.nombre
+                    || ('Tutor #' + (v?.tutor_id ?? '—'))
+                }}
+              </div>
+
+              <!-- Subtítulo: Tutor -->
+              <div class="muted" *ngIf="v?.empresa">
+                {{
+                  v?.nombre
+                    ? ('Tutor: ' + v.nombre)
+                    : ('Tutor #' + (v?.tutor_id ?? '—'))
+                }}
+              </div>
+
+              <div class="muted" *ngIf="v?.total != null">
+                Visitas: <strong>{{ v.total }}</strong>
+              </div>
+
+              <div class="muted" *ngIf="v?.ultima_visita">
+                Última visita: {{ displayFecha(v.ultima_visita) }}
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+
       <!-- Hoja de vida -->
-      <section class="section">
+      <section class="section card">
         <div class="section-header">
           <h3>Hoja de vida</h3>
         </div>

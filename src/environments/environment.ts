@@ -44,4 +44,8 @@ export const environment = {
     SIGN_OUT_REDIRECT_URL: 'http://localhost:4200/',
     AUTENTICACION_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/autenticacion_mid/v1/token/userRol',
   },
+  auth: {
+    oidcLogoutUrl: 'https://autenticacion.portaloas.udistrital.edu.co/oidc/logout',
+    postLogoutRedirectUri: 'http://localhost:4200/',
+  },
 };

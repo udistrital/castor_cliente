@@ -6,7 +6,7 @@
     <div *ngIf="cargando" class="muted">Cargando ofertas…</div>
     <ng-container *ngIf="!cargando && ofertas.length; else ofertasVacias">
       <div class="ofertas-grid">
-        <mat-card class="oferta-card" *ngFor="let oferta of ofertas">
+        <mat-card class="oferta-card" *ngFor="let oferta of ofertas" (click)="goDetalle(oferta.id)">
           <mat-card-header>
             <mat-card-title>{{ oferta.titulo || 'Oferta' }}</mat-card-title>
             <mat-card-subtitle>{{ oferta.estado_det || '—' }}</mat-card-subtitle>
@@ -19,7 +19,7 @@
             </p>
           </mat-card-content>
           <mat-card-actions>
-            <button mat-stroked-button color="primary" (click)="postularme(oferta.id)">
+            <button mat-stroked-button color="primary" (click)="$event.stopPropagation(); postularme(oferta.id)">
               Postularme
             </button>
           </mat-card-actions>

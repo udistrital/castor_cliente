@@ -1,0 +1,14 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Detalle postulación</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p>ID: {{ id ?? '—' }}</p>
+  </mat-card-content>
+  <mat-card-actions>
+    <button mat-stroked-button color="primary" (click)="volver()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+  </mat-card-actions>
+</mat-card>

@@ -8,6 +8,9 @@ export interface EstudianteDashboardResumen {
   invitaciones?: number | Record<string, number>;
   postulaciones?: number | Record<string, number>;
   postulaciones_por_estado?: Record<string, number> | Array<{ estado: string; total: number }>;
+  pasante_activo?: boolean;
+  pasantia_activa?: Record<string, any>;
+  perfil_visible?: boolean | null;
 }
 
 
@@ -50,5 +53,4 @@ export class EstudianteDashboardService {
   }
 
 }
-
 

@@ -71,8 +71,14 @@ export class EstudiantesService {
   );
 }
 
+  putVisibilidad(terceroId: number, visible: boolean): Observable<any> {
+    return this.requestManager.castorMidPut(
+      'estudiantes/perfil/visibilidad',
+      { tercero_id: terceroId, visible }
+    );
+  }
+
 }
 
 // Dentro de EstudiantesService (class EstudiantesService { ... })
-
 

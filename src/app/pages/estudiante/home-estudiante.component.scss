@@ -1,16 +1,32 @@
-.home-shell {
+.home-shell.bg {
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 20%, #f7fbff 0, #eef3ff 35%, #f8f9fb 100%);
   padding: 40px 16px;
   display: flex;
   justify-content: center;
+
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(21, 101, 192, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(16, 185, 129, 0.10), transparent 55%),
+    radial-gradient(circle at 20% 20%, #f7fbff 0, #eef3ff 35%, #f8f9fb 100%);
 }
 
-.home-card {
+.home-card.elev {
   width: 100%;
   max-width: 1100px;
-  box-shadow: 0 18px 60px rgba(15, 33, 69, 0.1);
   border-radius: 20px;
+  border: 1px solid rgba(15, 33, 69, 0.14);
+  box-shadow: 0 18px 60px rgba(15, 33, 69, 0.12);
+  overflow: hidden;
+}
+
+.home-header {
+  padding: 18px 18px 8px 18px;
+  border-bottom: 1px solid rgba(15, 33, 69, 0.08);
+  background: linear-gradient(180deg, rgba(21, 101, 192, 0.08), transparent);
+}
+
+.home-content {
+  padding: 18px;
 }
 
 .avatar {
@@ -21,8 +37,14 @@
   place-items: center;
 }
 
-.section {
-  margin-top: 24px;
+/* Secciones “card” */
+.section.card {
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(15, 33, 69, 0.16);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 38px rgba(15, 33, 69, 0.09);
 }
 
 .section-header {
@@ -30,16 +52,19 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+
   h3 {
     margin: 0;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: 800;
     color: #0f2145;
+    letter-spacing: 0.2px;
   }
+
   &.sub h4 {
     margin: 0;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: #203354;
   }
 }
@@ -50,93 +75,164 @@
   gap: 14px;
 }
 
+.kpi-grid .info-card.kpi {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Acentos por KPI (barra lateral) */
+.info-card.kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  opacity: 0.95;
+}
+
+.kpi-accent-1::before { background: linear-gradient(180deg, #1565c0, #1e88e5); }
+.kpi-accent-2::before { background: linear-gradient(180deg, #7c3aed, #a78bfa); }
+.kpi-accent-3::before { background: linear-gradient(180deg, #10b981, #34d399); }
+
 .info-card {
-  background: #f8faff;
-  border: 1px solid #e3ebff;
-  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid rgba(21, 101, 192, 0.18);
+  border-radius: 14px;
   padding: 12px 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(21, 101, 192, 0.40);
+    box-shadow: 0 10px 22px rgba(15, 33, 69, 0.10);
+  }
+
   .label {
     font-size: 12px;
     letter-spacing: 0.3px;
     text-transform: uppercase;
     color: #5b6b85;
     margin-bottom: 6px;
+    font-weight: 800;
   }
+
   .value {
-    font-weight: 700;
+    font-weight: 800;
     color: #10213f;
-  }
-  .muted {
-    color: #7a8699;
-    margin-left: 6px;
-    font-size: 12px;
+    font-size: 18px;
+    line-height: 1.1;
   }
 }
 
 .resumen {
-  background: #f5f8ff;
-  border: 1px solid #e0e8ff;
+  background: #eaf2ff;
+  border: 1px solid #c9dcff;
   border-radius: 12px;
   padding: 14px;
   line-height: 1.5;
-  color: #1f2d42;
+  color: #16263f;
 }
 
 .muted {
   color: #7a8699;
   margin: 0;
+  font-size: 12.5px;
 }
 
 .habilidades {
-  margin-top: 18px;
+  margin-top: 10px;
+}
+
+.perfil-visibilidad {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(15, 33, 69, 0.18);
+  background: rgba(245, 248, 255, 0.7);
+  
+  .section-header.sub {
+    gap: 10px;
+
+    .hint-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: rgba(15, 33, 69, 0.55);
+      cursor: help;
+    }
+  }
+
+  mat-slide-toggle {
+    margin-top: 8px;
+  }
 }
 
 .chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+
   mat-chip {
-    background: #e6f0ff;
-    color: #0b3c7a;
-    font-weight: 600;
+    background: #d6e7ff;
+    color: #083469;
+    font-weight: 700;
+    border-radius: 999px;
+    border: 1px solid #bcd4ff;
+    box-shadow: 0 2px 6px rgba(8, 52, 105, 0.12);
   }
 }
 
-.steps {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 10px;
-  li {
-    display: grid;
-    grid-template-columns: 28px 1fr;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    border: 1px solid #e5ecf5;
-    border-radius: 12px;
-    background: #fff;
-    box-shadow: 0 8px 24px rgba(15, 33, 69, 0.06);
-    color: #1f2d42;
-    mat-icon {
-      color: #1565c0;
-    }
+.chip-row-tight {
+  margin-top: 6px;
+}
+
+/* Chips por estado (invitaciones) */
+.chip-estado {
+  border: 1px solid rgba(15, 33, 69, 0.18);
+}
+
+.st-enviada   { background: rgba(59, 130, 246, 0.18) !important; color: rgb(37, 99, 235) !important; }
+.st-aceptada  { background: rgba(16, 185, 129, 0.18) !important; color: rgb(5, 150, 105) !important; }
+.st-rechazada { background: rgba(239, 68, 68, 0.18) !important; color: rgb(220, 38, 38) !important; }
+.st-expirada  { background: rgba(100, 116, 139, 0.20) !important; color: rgb(71, 85, 105) !important; }
+.st-cancelada { background: rgba(245, 158, 11, 0.20) !important; color: rgb(217, 119, 6) !important; }
+
+/* Cards clickeables (invitaciones/ofertas rec) */
+.info-card.clickable {
+  cursor: pointer;
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
-.link {
-  color: #1565c0;
-  font-weight: 600;
-  text-decoration: none;
+.hint {
+  margin-top: 8px;
+  opacity: 0.9;
+}
+
+/* Clamp */
+.line-clamp-2, .line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 { -webkit-line-clamp: 2; }
+.line-clamp-3 { -webkit-line-clamp: 3; }
+
+.section.card:hover {
+  border-color: rgba(15, 33, 69, 0.26);
+  box-shadow: 0 18px 44px rgba(15, 33, 69, 0.12);
 }
 
 @media (max-width: 768px) {
-  .home-shell {
+  .home-shell.bg {
     padding: 20px 12px;
   }
-  .home-card {
+  .home-card.elev {
     border-radius: 14px;
+  }
+  .home-content {
+    padding: 12px;
   }
 }
