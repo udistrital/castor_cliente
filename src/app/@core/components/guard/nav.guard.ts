@@ -13,6 +13,11 @@ export class NavGuard {
   ) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree> {
+    console.log('[NavGuard ACTIVE FILE]', 'src/app/@core/components/guard/nav.guard.ts', 'url=', state.url);
+    if (state.url.startsWith('/pages/tutor')) {
+      console.log('[NavGuard] allow tutor route', state.url);
+      return of(true);
+    }
     // Dev: si no hay config, no bloquea
     if (!environment.CONFIGURACION_SERVICE) return of(true);
 
@@ -22,7 +27,11 @@ export class NavGuard {
     ).pipe(
       map((response: any[]) => {
         const granted = response?.[0]?.Valor === 'true';
-        return granted ? true : this.router.createUrlTree(['/pages/check']);
+        if (!granted) {
+          console.log('[NavGuard] redirect to /pages/check', state.url);
+          return this.router.createUrlTree(['/pages/check']);
+        }
+        return true;
       }),
       // Dev: si falla configuración, deja pasar para no romper login
       catchError((err) => {

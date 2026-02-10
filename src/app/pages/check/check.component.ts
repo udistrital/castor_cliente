@@ -73,7 +73,10 @@ export class CheckComponent implements OnInit {
     localStorage.setItem('castor_estudiante_ctx', JSON.stringify(baseCtx));
 
     // Priorización de rol (evita edge-case donde un tutor también tenga ESTUDIANTE por algún motivo)
-    const esTutorExterno = roles.includes('DIRECTOR_EXTERNO');
+    const esTutorExterno =
+      roles.includes('DIRECTOR_EXTERNO') ||
+      roles.includes('TUTOR_EXTERNO') ||
+      roles.includes('DOCENTE');
     const esEstudiante = roles.includes('ESTUDIANTE');
 
     // ====== FLUJO TUTOR EXTERNO ======

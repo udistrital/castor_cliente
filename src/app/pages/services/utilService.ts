@@ -1,15 +1,18 @@
 import { Injectable } from '@angular/core';
-import Swal from 'sweetalert2';
+import { AlertService } from '../../@core/services/ui/alert.service';
 
 @Injectable({
     providedIn: 'root',
 })
 export class UtilService {
 
-    constructor() { }
+    constructor(
+        // Use centralized AlertService to avoid Swal runtime errors and recursion.
+        private alert: AlertService,
+    ) { }
 
     input(titulo: string, etiqueta: string): Promise<any> {
-        return Swal.fire({
+        return this.alert.fire({
             title: titulo,
             input: 'text',
             inputLabel: etiqueta,
@@ -24,7 +27,7 @@ export class UtilService {
     }
 
     confirm(titulo: string, texto: string, option: string): Promise<any> {
-        return Swal.fire({
+        return this.alert.fire({
             title: titulo,
             text: texto,
             icon: 'question',
@@ -35,7 +38,7 @@ export class UtilService {
     }
 
     success(texto: string): Promise<any> {
-        return Swal.fire({
+        return this.alert.fire({
             title: 'Exito!',
             text: texto,
             icon: 'success',
@@ -43,7 +46,7 @@ export class UtilService {
     }
 
     error(texto: string): Promise<any> {
-        return Swal.fire({
+        return this.alert.fire({
             title: 'Error',
             text: texto,
             icon: 'error',
@@ -51,7 +54,7 @@ export class UtilService {
     }
 
     warning(texto: string): Promise<any> {
-        return Swal.fire({
+        return this.alert.fire({
             title: 'Atención',
             text: texto,
             icon: 'warning',
@@ -59,21 +62,21 @@ export class UtilService {
     }
 
     loading(): void{
-        Swal.fire({
+        this.alert.fire({
             title: 'Cargando...',
             allowOutsideClick: false,
             allowEscapeKey: false,
             showConfirmButton: false,
         });
-        Swal.showLoading();
+        this.alert.showLoading();
     }
 
     close(): void {
-        Swal.close();
+        this.alert.close();
     }
 
     submitAlert({ option, type, fn, data, info, fnReturn }): void {
-        Swal.fire({
+        this.alert.fire({
             title: `Se ${option === 'update' ? 'actualizará' : 'creará'} ${type}`,
             text: info,
             icon: 'warning',
@@ -83,18 +86,18 @@ export class UtilService {
         })
             .then((result) => {
                 if (result.value) {
-                    Swal.fire({
+                    this.alert.fire({
                         title: 'Por favor espere!',
                         html: `${option === 'update' ? 'Actualizando' : 'Creando'} ${type}`,
                         allowOutsideClick: false,
                         willOpen: () => {
-                            Swal.showLoading();
+                            this.alert.showLoading();
                         },
                     });
                     fn(data)
                         .then((response) => {
-                            Swal.close();
-                            Swal.fire(
+                            this.alert.close();
+                            this.alert.fire(
                                 `${option === 'update' ? 'Actualizado' : 'Creado'}`,
                                 `Se ha ${option === 'update' ? 'actualizado' : 'Creado'}  ${type} ${response} de forma exitosa`,
                                 'success'
@@ -103,8 +106,8 @@ export class UtilService {
                             });
                         })
                         .catch(err => {
-                            Swal.close();
-                            Swal.fire(
+                            this.alert.close();
+                            this.alert.fire(
                                 `No se ha podido ${option === 'update' ? 'Actualizar' : 'Crear'}  ${type}`,
                                 `error: ${err}`,
                                 'error'
@@ -114,7 +117,7 @@ export class UtilService {
             });
     }
     async termsAndConditional(): Promise<any> {
-        const { value: accept } = await Swal.fire({
+        const { value: accept } = await this.alert.fire({
             input: 'checkbox',
             inputValue: 1,
             html: `
@@ -131,7 +134,7 @@ export class UtilService {
         });
 
         if (accept) {
-            Swal.fire('You agreed with T&C :)');
+            this.alert.fire('You agreed with T&C :)');
         }
         return !!accept;
     }

@@ -1,0 +1,124 @@
+<div class="page-shell">
+  <div class="page-bg"></div>
+
+  <div class="page-card">
+    <div class="page-header">
+      <button mat-stroked-button color="primary" class="btn-round" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <div class="title-block">
+        <div class="title">Detalle de oferta</div>
+        <div class="subtitle">Revisa la información y postúlate si te interesa</div>
+      </div>
+      <span class="spacer"></span>
+    </div>
+
+    <div class="page-body">
+      <div *ngIf="loading" class="loading">
+        <mat-icon>hourglass_top</mat-icon>
+        <span>Cargando oferta…</span>
+      </div>
+
+      <div *ngIf="!loading && !oferta" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <div class="empty-title">No encontramos información para esta oferta</div>
+        <div class="muted">Intenta volver al listado y seleccionar otra oferta.</div>
+      </div>
+
+      <ng-container *ngIf="!loading && oferta">
+        <div class="detail-grid">
+          <div class="main">
+            <mat-card class="info-card">
+              <mat-card-content>
+                <div class="card-header">
+                  <div>
+                    <h2 class="card-title">{{ oferta?.titulo || 'Oferta' }}</h2>
+                    <div class="card-subtitle">{{ getEmpresaNombre() }}</div>
+                  </div>
+                  <mat-chip class="estado-chip">{{ getEstadoNombre() }}</mat-chip>
+                </div>
+
+                <div class="meta-row">
+                  <span *ngIf="oferta?.fecha_publicacion">Publicada {{ displayFecha(oferta?.fecha_publicacion) }}</span>
+                </div>
+
+                <div class="section">
+                  <div class="section-label">Descripción</div>
+                  <p class="section-text line-clamp-3">{{ oferta?.descripcion || 'Sin descripción.' }}</p>
+                </div>
+
+                <div class="section" *ngIf="oferta?.perfil">
+                  <div class="section-label">Perfil requerido</div>
+                  <p class="section-text">{{ oferta?.perfil }}</p>
+                </div>
+
+                <div class="section" *ngIf="oferta?.requisitos">
+                  <div class="section-label">Requisitos</div>
+                  <p class="section-text">{{ oferta?.requisitos }}</p>
+                </div>
+
+                <div class="section" *ngIf="oferta?.vacantes">
+                  <div class="section-label">Vacantes</div>
+                  <p class="section-text">{{ oferta?.vacantes }}</p>
+                </div>
+
+                <div class="section" *ngIf="oferta?.modalidad">
+                  <div class="section-label">Modalidad</div>
+                  <p class="section-text">{{ oferta?.modalidad }}</p>
+                </div>
+
+                <div class="section" *ngIf="oferta?.salario">
+                  <div class="section-label">Salario</div>
+                  <p class="section-text">{{ oferta?.salario }}</p>
+                </div>
+
+                <div class="section" *ngIf="oferta?.duracion_meses">
+                  <div class="section-label">Duración</div>
+                  <p class="section-text">{{ oferta?.duracion_meses }} meses</p>
+                </div>
+
+                <div class="section" *ngIf="oferta?.ciudad || oferta?.pais">
+                  <div class="section-label">Ubicación</div>
+                  <p class="section-text">{{ oferta?.ciudad || '' }} {{ oferta?.pais || '' }}</p>
+                </div>
+
+                <div class="card-actions">
+                  <ng-container *ngIf="yaPostulado; else postularBtn">
+                    <span class="muted">
+                      Ya estás postulado{{ postulacionEstadoNombre ? ' (' + postulacionEstadoNombre + ')' : '' }}
+                    </span>
+                    <button mat-stroked-button color="primary" class="btn-round" (click)="verMiPostulacion()">
+                      Ver mi postulación
+                    </button>
+                  </ng-container>
+                  <ng-template #postularBtn>
+                    <button mat-raised-button color="primary" class="btn-round" [disabled]="!canPostular" (click)="postularme()">
+                      Postularme
+                    </button>
+                  </ng-template>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <div class="side">
+            <mat-card class="info-card small">
+              <mat-card-content>
+                <div class="section-label">Empresa</div>
+                <div class="section-text">{{ getEmpresaNombre() }}</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="info-card small">
+              <mat-card-content>
+                <div class="section-label">Tutor</div>
+                <div class="section-text">{{ getTutorNombre() }}</div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

@@ -11,15 +11,24 @@ export class LoadingService {
   readonly message$ = this.messageSubject.asObservable();
 
   show(message = 'Cargando…'): void {
+    const before = this.counter;
     this.counter++;
-    this.messageSubject.next(message);
+    if (typeof message === 'string' && message.trim().length > 0) {
+      this.messageSubject.next(message);
+    }
+    console.debug(
+      `[LOADING] show: before=${before} after=${this.counter} msg="${this.messageSubject.value}"`,
+    );
     this.isActiveSubject.next(true);
   }
 
   hide(): void {
+    const before = this.counter;
     if (this.counter > 0) {
       this.counter--;
     }
+    this.counter = Math.max(0, this.counter);
+    console.debug(`[LOADING] hide: before=${before} after=${this.counter}`);
     if (this.counter === 0) {
       this.isActiveSubject.next(false);
       this.messageSubject.next('Cargando…');

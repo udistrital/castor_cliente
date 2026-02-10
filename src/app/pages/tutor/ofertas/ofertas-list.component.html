@@ -1,1 +1,145 @@
-<h1>Ofertas</h1>
+<mat-card class="ofertas-card">
+  <div class="page-header">
+    <button mat-stroked-button (click)="volver()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <div class="title-block">
+      <div class="title">Mis ofertas</div>
+      <div class="caption">Total: {{ total }}</div>
+    </div>
+    <span class="spacer"></span>
+    <button mat-raised-button color="primary" (click)="nuevaOferta()">Nueva oferta</button>
+  </div>
+
+  <mat-card-content>
+    <ng-template #tabla let-rows>
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="rows" class="mat-elevation-z0" *ngIf="rows.length; else emptyState">
+          <ng-container matColumnDef="titulo">
+            <th mat-header-cell *matHeaderCellDef>Título</th>
+            <td mat-cell *matCellDef="let row">{{ getTitulo(row) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let row">{{ getEstadoNombre(row) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef class="col-fecha">Fecha</th>
+            <td mat-cell *matCellDef="let row" class="col-fecha" [title]="getFecha(row)">
+              {{ displayFecha(getFecha(row)) || '-' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef class="text-right col-actions">Acciones</th>
+            <td mat-cell *matCellDef="let row" class="text-right col-actions">
+              <button mat-icon-button color="primary" aria-label="Ver" (click)="verDetalle(row)">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <ng-container *ngIf="canMostrarAcciones(row)">
+                <button
+                  mat-icon-button
+                  [matMenuTriggerFor]="menu"
+                  aria-label="Acciones"
+                  [disabled]="actionLoadingId === (row?.id ?? row?.oferta_id ?? row?.ofertaId)"
+                >
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #menu="matMenu">
+                  <button mat-menu-item *ngIf="isAbierta(row)" (click)="pausar(row)">
+                    <mat-icon>pause</mat-icon>
+                    <span>Pausar</span>
+                  </button>
+                  <button mat-menu-item *ngIf="isPausada(row)" (click)="reactivar(row)">
+                    <mat-icon>play_arrow</mat-icon>
+                    <span>Reactivar</span>
+                  </button>
+                  <button mat-menu-item *ngIf="canFinalizar(row)" (click)="finalizar(row)">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Finalizar</span>
+                  </button>
+                  <button mat-menu-item *ngIf="canFinalizar(row)" (click)="cancelar(row)">
+                    <mat-icon>cancel</mat-icon>
+                    <span>Cancelar</span>
+                  </button>
+                </mat-menu>
+              </ng-container>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+
+        <ng-template #emptyState>
+          <div class="empty-state">
+            <span *ngIf="!loading">No hay ofertas para mostrar.</span>
+            <span *ngIf="loading">Cargando ofertas...</span>
+          </div>
+        </ng-template>
+      </div>
+    </ng-template>
+
+    <mat-tab-group>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          Abiertas
+          <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+            {{ ofertasAbiertas.length }}
+          </span>
+        </ng-template>
+        <ng-container *ngTemplateOutlet="tabla; context: { $implicit: ofertasAbiertas }"></ng-container>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          En curso
+          <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+            {{ ofertasEnCurso.length }}
+          </span>
+        </ng-template>
+        <ng-container *ngTemplateOutlet="tabla; context: { $implicit: ofertasEnCurso }"></ng-container>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          Pausadas
+          <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+            {{ ofertasPausadas.length }}
+          </span>
+        </ng-template>
+        <ng-container *ngTemplateOutlet="tabla; context: { $implicit: ofertasPausadas }"></ng-container>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          Finalizadas
+          <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+            {{ ofertasFinalizadas.length }}
+          </span>
+        </ng-template>
+        <ng-container *ngTemplateOutlet="tabla; context: { $implicit: ofertasFinalizadas }"></ng-container>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          Canceladas
+          <span class="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+            {{ ofertasCanceladas.length }}
+          </span>
+        </ng-template>
+        <ng-container *ngTemplateOutlet="tabla; context: { $implicit: ofertasCanceladas }"></ng-container>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card-content>
+
+  <mat-card-actions>
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[5, 10, 20, 50]"
+      [disabled]="loading"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  </mat-card-actions>
+</mat-card>

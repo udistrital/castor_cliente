@@ -1,3 +1,44 @@
 .mat-card {
   margin: 16px;
 }
+ .postulaciones-card {
+  margin: 16px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.filters .label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.empty-state {
+  padding: 16px 0;
+  color: #666;
+}
+
+.page-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px;
+}
+
+.btn-round {
+  border-radius: 12px;
+}

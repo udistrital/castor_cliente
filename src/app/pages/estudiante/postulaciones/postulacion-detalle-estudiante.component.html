@@ -1,0 +1,116 @@
+<div class="page-shell">
+  <div class="page-bg"></div>
+
+  <div class="page-card">
+    <div class="page-header">
+      <button mat-stroked-button color="primary" class="btn-round" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <div class="title-block">
+        <div class="title">Detalle de postulación</div>
+        <div class="subtitle">Estado y datos de tu postulación</div>
+      </div>
+      <span class="spacer"></span>
+    </div>
+
+    <div class="page-body">
+      <div *ngIf="loading" class="loading">
+        <mat-icon>hourglass_top</mat-icon>
+        <span>Cargando detalle…</span>
+      </div>
+
+      <div *ngIf="!loading && !detalle" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <div class="empty-title">No encontramos información para esta postulación</div>
+        <div class="muted">Intenta volver al listado.</div>
+      </div>
+
+      <ng-container *ngIf="!loading && detalle">
+        <div class="detail-grid">
+          <div class="main">
+            <mat-card class="info-card">
+              <mat-card-content>
+                <div class="card-header">
+                  <div>
+                    <h2 class="card-title">{{ getOfertaTitulo() }}</h2>
+                    <div class="card-subtitle">{{ empresaNombre || '-' }}</div>
+                  </div>
+                  <mat-chip class="estado-chip">{{ getEstadoNombre() }}</mat-chip>
+                </div>
+
+                <div class="meta-row">
+                  <span *ngIf="detalle?.fecha_postulacion">Postulada {{ displayFecha(detalle?.fecha_postulacion) }}</span>
+                </div>
+
+                <div class="section">
+                  <div class="section-label">Oferta</div>
+                  <div class="section-text">{{ getOfertaTitulo() }}</div>
+                  <button
+                    mat-stroked-button
+                    color="primary"
+                    class="btn-round btn-mini"
+                    [disabled]="!detalle?.oferta_id && !detalle?.oferta_resumen?.id"
+                    (click)="verOferta()"
+                  >
+                    <mat-icon>open_in_new</mat-icon>
+                    Ver oferta
+                  </button>
+                </div>
+
+                <div class="section">
+                  <div class="section-label">Empresa</div>
+                  <div class="section-text">{{ empresaNombre || '-' }}</div>
+                </div>
+
+                <div class="section">
+                  <div class="section-label">Tutor</div>
+                  <div class="section-text">{{ getTutorNombre() }}</div>
+                </div>
+
+                <div class="card-actions">
+                  <button
+                    mat-stroked-button
+                    color="warn"
+                    class="btn-round"
+                    [disabled]="!puedeCancelar() || loading"
+                    (click)="cancelarPostulacion()"
+                  >
+                    Cancelar postulación
+                  </button>
+
+                  <button
+                    *ngIf="puedeAceptarSeleccion()"
+                    mat-raised-button
+                    color="accent"
+                    class="btn-round"
+                    [disabled]="loading"
+                    (click)="aceptarSeleccion()"
+                  >
+                    Aceptar selección
+                  </button>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <div class="side">
+            <mat-card class="info-card small">
+              <mat-card-content>
+                <div class="section-label">Estado</div>
+                <div class="section-text">{{ getEstadoNombre() }}</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="info-card small">
+              <mat-card-content>
+                <div class="section-label">Fecha</div>
+                <div class="section-text">{{ displayFecha(detalle?.fecha_postulacion) || '-' }}</div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

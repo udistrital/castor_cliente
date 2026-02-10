@@ -1,28 +1,88 @@
+<!-- ✅ Topbar (como tutor/explorar) -->
+<div class="page-topbar">
+  <button mat-stroked-button color="primary" class="btn-round" (click)="volver()">
+    <mat-icon>arrow_back</mat-icon>
+    Volver
+  </button>
+
+  <button mat-stroked-button color="primary" class="btn-round" (click)="irDashboard()">
+    <mat-icon>dashboard</mat-icon>
+    Dashboard
+  </button>
+</div>
+
 <mat-card class="card">
   <mat-card-title>Mis invitaciones</mat-card-title>
 
   <mat-card-content>
+    <div class="chips-row">
+      <button
+        mat-stroked-button
+        class="chip-btn"
+        *ngFor="let c of estadoChips"
+        [class.active]="estado === c.value"
+        (click)="setEstadoFilter(c.value)"
+      >
+        {{ c.label }}
+      </button>
+    </div>
+
+    <div *ngIf="pasanteActivo" class="muted warn-banner">
+      Tienes una pasantía activa. No puedes aceptar/rechazar invitaciones.
+    </div>
+
+    <div *ngIf="!pasanteActivo && existeAceptada" class="muted warn-banner">
+      Ya tienes una invitación aceptada. Las demás acciones están deshabilitadas.
+    </div>
+
     <div *ngIf="cargando" class="muted">Cargando invitaciones…</div>
 
     <ng-container *ngIf="!cargando && invitaciones.length; else invitacionesVacias">
       <div class="list">
-        <mat-card class="item" *ngFor="let inv of invitaciones">
+        <mat-card
+          class="item"
+          *ngFor="let inv of invitaciones"
+          (click)="goDetalle(inv.id)"
+          [ngClass]="getCardTone(inv)"
+        >
           <mat-card-content>
             <div class="row">
               <div class="col">
-                <div class="title">{{ inv.oferta || ('Invitación #' + inv.id) }}</div>
+                <div class="title">
+                  {{
+                    inv?.oferta_resumen?.titulo
+                      || inv?.oferta
+                      || ('Oferta #' + (inv?.oferta_pasantia_id ?? inv?.id))
+                  }}
+                </div>
+
                 <div class="muted">{{ inv.mensaje || '—' }}</div>
+
                 <div class="meta">
-                  <span class="chip">{{ inv.estado || '—' }}</span>
-                  <span class="muted" *ngIf="inv.fecha">· {{ inv.fecha }}</span>
+                  <span class="chip">
+                    {{ inv?.estado_det?.nombre || inv?.estado || '—' }}
+                  </span>
+
+                  <span class="muted" *ngIf="inv.fecha">· {{ displayFecha(inv.fecha) }}</span>
                 </div>
               </div>
 
               <div class="actions">
-                <button mat-stroked-button color="primary" (click)="aceptar(inv.id)">
+                <button
+                  mat-stroked-button
+                  color="primary"
+                  [disabled]="!canAct(inv)"
+                  (click)="aceptar(inv.id, $event)"
+                >
                   Aceptar
                 </button>
-                <button mat-stroked-button color="warn" (click)="rechazar(inv.id)">
+
+                <button
+                  mat-stroked-button
+                  color="warn"
+                  [disabled]="!canAct(inv)"
+                  (click)="rechazar(inv.id, $event)"
+                >
                   Rechazar
                 </button>
               </div>
@@ -31,8 +91,10 @@
         </mat-card>
       </div>
 
-      <div class="muted" style="margin-top: 8px;">
-        Total: {{ total }}
+      <div class="pager">
+        <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Anterior</button>
+        <span class="muted">Página {{ page }} / {{ totalPages }} · Total: {{ total }}</span>
+        <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Siguiente</button>
       </div>
     </ng-container>
 

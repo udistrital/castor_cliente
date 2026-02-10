@@ -3,6 +3,7 @@ import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from '@a
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { RequestManager } from 'src/app/pages/services/requestManager';
+import { TokenService } from 'src/app/@core/services/auth/token.service';
 import { environment } from 'src/environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -10,6 +11,7 @@ export class RoleGuard {
   constructor(
     private router: Router,
     private request: RequestManager,
+    private token: TokenService,
   ) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree> {
@@ -18,14 +20,18 @@ export class RoleGuard {
     // ✅ No bloquees el onboarding del tutor por menú
     if (targetUrl.startsWith('/pages/tutor/registro')) return of(true);
 
-    const userRaw = localStorage.getItem('user');
-    if (!userRaw) return of(this.router.createUrlTree(['/pages/dashboard']));
+    const roleList = this.getRoles();
+    const roles = roleList.join(',').replace('Internal/everyone,', '');
 
-    let roles = '';
-    try {
-      const user = JSON.parse(atob(userRaw));
-      roles = Array(user?.user?.role).join(',').replace('Internal/everyone,', '');
-    } catch {
+    if (targetUrl.startsWith('/pages/tutor')) {
+      console.log('[RoleGuard] tutor url=', targetUrl, 'roles=', roles);
+      if (roles.includes('DIRECTOR_EXTERNO') || roles.includes('TUTOR_EXTERNO') ||
+          roles.includes('DOCENTE')) {
+        return of(true);
+      }
+      if (!roles) {
+        return of(true);
+      }
       return of(this.router.createUrlTree(['/pages/dashboard']));
     }
 
@@ -46,6 +52,20 @@ export class RoleGuard {
         return of(true);
       })
     );
+  }
+
+  private getRoles(): string[] {
+    const r1 = (this.token as any)?.currentUser?.role;
+    const r2 = (this.token as any)?.roles;
+    const r3 = (this.token as any)?.currentUser?.user?.role;
+    const r = r1 ?? r2 ?? r3 ?? [];
+    if (Array.isArray(r)) {
+      return r.map(String);
+    }
+    if (typeof r === 'string') {
+      return r.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+    return [];
   }
 }
 

@@ -1,17 +1,20 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { AlertService } from 'src/app/@core/services/ui/alert.service';
 import { LoadingService } from 'src/app/@core/services/ui/loading.service';
 import { TokenService } from 'src/app/@core/services/auth/token.service';
 import { TutorDashboardService } from 'src/app/@core/services/tutor/tutor-dashboard.service';
+import { TutorExplorarService } from 'src/app/@core/services/tutor/tutor-explorar.service';
 import { RequestManager } from 'src/app/pages/services/requestManager';
 
 @Component({
@@ -19,10 +22,13 @@ import { RequestManager } from 'src/app/pages/services/requestManager';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
+    MatChipsModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatSelectModule,
   ],
@@ -31,23 +37,23 @@ import { RequestManager } from 'src/app/pages/services/requestManager';
 })
 export class TutorOfertaNuevaComponent implements OnInit {
   tutorId: number | null = null;
-  empresaId: number | null = null;
   needsEmpresa = false;
 
   form = this.fb.group({
     titulo: ['', [Validators.required]],
-    descripcion: [''],
-    empresa_tercero_id: [{ value: null, disabled: true }, [Validators.required]],
-    modalidad: [''],
-    estado: [''],
-    tutor_externo_id: [{ value: null, disabled: true }, [Validators.required]],
-    proyectos_curriculares: [''],
+    descripcion: ['', [Validators.maxLength(1200)]],
+    proyectos_curriculares_ids: this.fb.nonNullable.control<number[]>([]),
   });
+
+  proyectosCurriculares: Array<{ id: number; nombre: string }> = [];
+  pcSearch = '';
+  loadingPC = false;
 
   constructor(
     private fb: FormBuilder,
     private token: TokenService,
     private tutorDashboard: TutorDashboardService,
+    private explorarService: TutorExplorarService,
     private rm: RequestManager,
     private loading: LoadingService,
     private alert: AlertService,
@@ -70,9 +76,8 @@ export class TutorOfertaNuevaComponent implements OnInit {
       this.loading.hide();
 
       const data = (estado as any)?.Data ?? {};
-      this.tutorId = Number(data.tutor_id || 0) || null;
-      this.empresaId = data.empresa_id ?? null;
       this.needsEmpresa = Boolean(data.needs_empresa);
+      this.tutorId = Number(data.tutor_id || 0) || null;
 
       if (this.needsEmpresa) {
         await this.alert.info('Registro requerido', 'Debes asociar una empresa antes de crear ofertas.');
@@ -80,22 +85,35 @@ export class TutorOfertaNuevaComponent implements OnInit {
         return;
       }
 
-      if (!this.tutorId || !this.empresaId) {
-        this.alert.error('Error', 'No se pudo identificar tutor o empresa.');
+      if (!this.tutorId) {
+        this.alert.error('Error', 'No se pudo identificar tu tutor.');
         this.router.navigateByUrl('/pages/tutor/dashboard');
         return;
       }
-
-      this.form.patchValue({
-        tutor_externo_id: this.tutorId,
-        empresa_tercero_id: this.empresaId,
-      });
     } catch (error) {
       this.loading.hide();
       console.error('[TutorOfertaNueva] init error', error);
       this.alert.error('Error', 'No se pudo cargar tu estado como tutor.');
       this.router.navigateByUrl('/pages/home');
+      return;
     }
+
+    this.loadingPC = true;
+    try {
+      this.proyectosCurriculares = await firstValueFrom(
+        this.explorarService.listarProyectosCurriculares()
+      );
+    } catch (error) {
+      console.error('[TutorOfertaNueva] proyectos curriculares error', error);
+      this.alert.error('Error', 'No fue posible cargar los proyectos curriculares.');
+      this.proyectosCurriculares = [];
+    } finally {
+      this.loadingPC = false;
+    }
+  }
+
+  get pcsSeleccionados(): number[] {
+    return (this.form.value.proyectos_curriculares_ids ?? []) as number[];
   }
 
   async onSubmit(): Promise<void> {
@@ -106,28 +124,18 @@ export class TutorOfertaNuevaComponent implements OnInit {
     }
 
     const raw = this.form.getRawValue();
-    const proyectos = this.parseProyectos(raw.proyectos_curriculares || '');
-    if (proyectos === null) {
-      this.alert.error('Error', 'Proyectos curriculares inválidos.');
-      return;
-    }
-
     const payload = {
       oferta: {
         titulo: (raw.titulo || '').trim(),
         descripcion: (raw.descripcion || '').trim(),
-        empresa_tercero_id: Number(raw.empresa_tercero_id),
-        modalidad: (raw.modalidad || '').trim(),
-        estado: (raw.estado || '').trim(),
-        tutor_externo_id: Number(raw.tutor_externo_id),
       },
-      proyectos_curriculares: proyectos,
+      proyectos_curriculares: this.form.value.proyectos_curriculares_ids ?? [],
     };
     console.log('[TutorOfertaNueva] submit payload=', payload);
 
     try {
       this.loading.show('Creando oferta…');
-      await firstValueFrom(this.rm.post('castor_mid', 'ofertas', payload));
+      await firstValueFrom(this.rm.post('castor_mid', `ofertas?tutor_id=${this.tutorId}`, payload));
       this.loading.hide();
       await this.alert.success('Listo', 'Oferta creada correctamente.');
       this.router.navigateByUrl('/pages/tutor/dashboard');
@@ -142,22 +150,20 @@ export class TutorOfertaNuevaComponent implements OnInit {
     this.router.navigateByUrl('/pages/tutor/dashboard');
   }
 
-  private parseProyectos(value: string): number[] | null {
-    const raw = value
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-    if (raw.length === 0) {
-      return [];
+  filteredPCs(): Array<{ id: number; nombre: string }> {
+    const term = this.pcSearch.trim().toLowerCase();
+    if (!term) {
+      return this.proyectosCurriculares;
     }
-    const ids: number[] = [];
-    for (const item of raw) {
-      const parsed = Number(item);
-      if (!Number.isFinite(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
-        return null;
-      }
-      ids.push(parsed);
-    }
-    return ids;
+    return this.proyectosCurriculares.filter((pc) => pc.nombre.toLowerCase().includes(term));
+  }
+
+  removePc(id: number): void {
+    const updated = this.pcsSeleccionados.filter((item) => item !== id);
+    this.form.patchValue({ proyectos_curriculares_ids: updated });
+  }
+
+  displayPcName(id: number): string {
+    return this.proyectosCurriculares.find((pc) => pc.id === id)?.nombre || `ID ${id}`;
   }
 }

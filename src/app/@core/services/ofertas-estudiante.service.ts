@@ -45,4 +45,19 @@ export class OfertasEstudianteService {
       .get<ApiEnvelope<OfertasDisponiblesResponse>>('castor_mid', 'ofertas', params)
       .pipe(map((res) => res?.Data ?? { items: [], total: 0, page, size }));
   }
+
+  getOfertasDisponibles(estudianteId: number, page = 1, size = 10): Observable<OfertasDisponiblesResponse> {
+    return this.getDisponibles(estudianteId, page, size);
+  }
+
+  getDetalle(ofertaId: number): Observable<any> {
+    return this.requestManager.get<ApiEnvelope<any>>('castor_mid', `ofertas/${ofertaId}`)
+      .pipe(map((res) => res?.Data ?? res));
+  }
+
+  postular(ofertaId: number, estudianteId: number): Observable<any> {
+    // Querystring para evitar cambios en RequestManager / headers.
+    const path = `ofertas/${ofertaId}/postular?estudiante_id=${encodeURIComponent(estudianteId)}`;
+    return this.requestManager.castorMidPost(path, {});
+  }
 }

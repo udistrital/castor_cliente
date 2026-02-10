@@ -24,12 +24,24 @@ const routes: Routes = [{
           loadComponent: () => import('./estudiante/ofertas/ofertas-disponibles.component').then(m => m.OfertasDisponiblesComponent),
         },
         {
+          path: 'ofertas/:id',
+          loadComponent: () => import('./estudiante/ofertas/oferta-detalle-estudiante.component').then(m => m.OfertaDetalleEstudianteComponent),
+        },
+        {
           path: 'invitaciones',
           loadComponent: () => import('./estudiante/invitaciones/invitaciones-estudiante.component').then(m => m.InvitacionesEstudianteComponent),
         },
         {
+          path: 'invitaciones/:id',
+          loadComponent: () => import('./estudiante/invitaciones/invitacion-detalle-estudiante.component').then(m => m.InvitacionDetalleEstudianteComponent),
+        },
+        {
           path: 'postulaciones',
           loadComponent: () => import('./estudiante/postulaciones/mis-postulaciones.component').then(m => m.MisPostulacionesComponent),
+        },
+        {
+          path: 'postulaciones/:id',
+          loadComponent: () => import('./estudiante/postulaciones/postulacion-detalle-estudiante.component').then(m => m.PostulacionDetalleEstudianteComponent),
         },
         {
           path: 'actualizar-cv',
@@ -96,8 +108,13 @@ const routes: Routes = [{
         },
         {
           path: 'invitaciones',
-          canActivate: [NavGuard, RoleGuard],
+          
           loadComponent: () => import('./tutor/invitaciones/invitaciones-tutor.component').then(m => m.InvitacionesTutorComponent),
+        },
+        {
+          path: 'invitaciones/:id',
+          
+          loadComponent: () => import('./tutor/invitaciones/invitacion-detalle-tutor.component').then(m => m.InvitacionDetalleTutorComponent),
         },
         {
           path: 'explorar-estudiantes',

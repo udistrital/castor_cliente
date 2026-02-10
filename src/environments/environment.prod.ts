@@ -40,5 +40,9 @@ export const environment = {
     SIGN_OUT_REDIRECT_URL: 'https://oas.portaloas.udistrital.edu.co',
     AUTENTICACION_MID: 'https://autenticacion.portaloas.udistrital.edu.co/apioas/autenticacion_mid/v1/token/userRol',
   },
+  auth: {
+    oidcLogoutUrl: 'https://autenticacion.portaloas.udistrital.edu.co/oidc/logout',
+    postLogoutRedirectUri: 'https://oas.portaloas.udistrital.edu.co',
+  },
 };
 

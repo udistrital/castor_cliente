@@ -1,1 +1,101 @@
-<h1>Invitaciones Tutor</h1>
+<div class="page">
+  <mat-card class="header">
+    <div class="header-left">
+      <button mat-stroked-button class="back" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <div>
+        <div class="title">Mis invitaciones</div>
+        <div class="subtitle">Total: {{ total }}</div>
+      </div>
+    </div>
+  </mat-card>
+
+  <mat-progress-bar *ngIf="cargando" mode="indeterminate"></mat-progress-bar>
+
+  <mat-card class="filters">
+    <mat-chip-listbox>
+      <mat-chip-option
+        *ngFor="let c of estadoChips"
+        [selected]="estado === c.value"
+        (click)="setEstadoFilter(c.value)"
+      >
+        {{ c.label }}
+      </mat-chip-option>
+    </mat-chip-listbox>
+  </mat-card>
+
+  <div class="skeleton" *ngIf="cargando">
+    <div class="skeleton-card" *ngFor="let s of [1,2,3]">
+      <div class="sk-line w-40"></div>
+      <div class="sk-line w-70"></div>
+      <div class="sk-line w-90"></div>
+    </div>
+  </div>
+
+  <mat-card class="empty" *ngIf="!cargando && !invitaciones.length">
+    <mat-icon>search_off</mat-icon>
+    <div class="empty-text">No hay invitaciones para este filtro</div>
+  </mat-card>
+
+  <div class="list" *ngIf="!cargando && invitaciones.length">
+    <mat-card
+      class="inv-card"
+      *ngFor="let inv of invitaciones"
+      [ngClass]="estadoClass(inv)"
+      (click)="goDetalle(inv.id)"
+    >
+      <div class="inv-leftbar"></div>
+      <mat-card-content>
+        <div class="inv-main">
+          <div class="inv-info">
+            <div class="inv-title">
+              {{ inv?.estudiante_nombre || inv?.estudiante_resumen?.nombre_completo || 'Estudiante' }}
+            </div>
+            <div class="inv-subtitle" *ngIf="inv?.oferta_resumen?.titulo || inv?.oferta">
+              Oferta: {{ inv?.oferta_resumen?.titulo || inv?.oferta }}
+            </div>
+            <div class="inv-msg" [title]="inv?.mensaje || ''">
+              {{ inv?.mensaje || '—' }}
+            </div>
+            <div class="meta">
+              <span class="chip-state">
+                {{ inv?.estado_det?.nombre || inv?.estado || inv?.estado_raw || '—' }}
+              </span>
+              <span class="chip-date" *ngIf="inv?.fecha_estado || inv?.fecha_creacion">
+                {{ displayFecha(inv?.fecha_estado || inv?.fecha_creacion) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="inv-actions">
+            <button
+              mat-stroked-button
+              color="primary"
+              type="button"
+              *ngIf="inv?.perfil_estudiante_id"
+              (click)="goPerfil(inv, $event)"
+            >
+              Ver perfil
+            </button>
+            <button
+              mat-stroked-button
+              color="warn"
+              (click)="cancelar(inv, $event)"
+              [disabled]="!canCancelar(inv)"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <mat-card class="pager" *ngIf="!cargando && invitaciones.length">
+    <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Anterior</button>
+    <span class="subtitle">Página {{ page }} / {{ totalPages }}</span>
+    <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Siguiente</button>
+  </mat-card>
+</div>

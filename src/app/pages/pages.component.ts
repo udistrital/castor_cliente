@@ -5,12 +5,26 @@ import { UserService } from './services/userService';
 import { DatosIdentificacion } from '../@core/models/datos_identificacion';
 import { Tercero } from '../@core/models/tercero';
 import { VinculacionTercero } from '../@core/models/vinculacion_tercero';
+import { TokenService } from '../@core/services/auth/token.service';
 
 @Component({
   selector: 'app-pages',
   template: `
+    <mat-toolbar>
+      <span></span>
+      <span class="spacer"></span>
+      <button mat-button (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Cerrar sesión
+      </button>
+    </mat-toolbar>
     <router-outlet></router-outlet>
   `,
+  styles: [`
+    .spacer {
+      flex: 1 1 auto;
+    }
+  `],
 })
 export class PagesComponent implements OnInit {
   loaded = false;
@@ -20,6 +34,7 @@ export class PagesComponent implements OnInit {
   constructor(
     private userService: UserService,
     private request: RequestManager,
+    private token: TokenService,
   ) { }
 
   ngOnInit(): void {
@@ -53,5 +68,9 @@ export class PagesComponent implements OnInit {
         });
       }
     });
+  }
+
+  logout(): void {
+    this.token.logout();
   }
 }

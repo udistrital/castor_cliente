@@ -3,12 +3,12 @@ import { Component, NgZone, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError, finalize, take } from 'rxjs/operators';
-import Swal from 'sweetalert2';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { AlertService } from 'src/app/@core/services/ui/alert.service';
 
 
 import { DocumentosService } from 'src/app/@core/services/documentos.service';
@@ -44,13 +44,15 @@ export class ActualizarCvComponent implements OnInit {
     private userContext: UserContextService,
     private loading: LoadingService,
     private snack: MatSnackBar,
+    // Use AlertService wrapper to avoid Swal runtime errors.
+    private alert: AlertService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     this.terceroId = this.resolveTerceroId();
 
     if (!this.terceroId) {
-      await Swal.fire('Información incompleta', 'No pudimos identificar tu tercero_id.', 'warning');
+      await this.alert.fire('Información incompleta', 'No pudimos identificar tu tercero_id.', 'warning');
       this.safeGoHome();
       return;
     }
@@ -85,7 +87,7 @@ export class ActualizarCvComponent implements OnInit {
 
     if (!isPdf) {
       this.archivo = null;
-      Swal.fire('Archivo inválido', 'Por favor selecciona un archivo PDF.', 'warning');
+      this.alert.fire('Archivo inválido', 'Por favor selecciona un archivo PDF.', 'warning');
       return;
     }
 
@@ -110,7 +112,7 @@ export class ActualizarCvComponent implements OnInit {
       );
     } catch (e) {
       this.loading.hide();
-      Swal.fire('Error', 'No fue posible abrir el PDF.', 'error');
+      this.alert.fire('Error', 'No fue posible abrir el PDF.', 'error');
     }
   }
 
@@ -254,7 +256,7 @@ async actualizar(): Promise<void> {
  */
 private async safeSwal(options: any): Promise<void> {
   try {
-    await Swal.fire(options);
+    await this.alert.fire(options);
   } catch (e) {
     // fallback ultra seguro
     const title = options?.title ? String(options.title) : 'Mensaje';

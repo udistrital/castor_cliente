@@ -71,8 +71,14 @@ export class EstudiantesService {
   );
 }
 
+  putVisibilidad(terceroId: number, visible: boolean): Observable<any> {
+    // Use RAW client to bypass interceptors for this endpoint and avoid recursion.
+    return this.requestManager.castorMidPutRaw(
+      'estudiantes/perfil/visibilidad',
+      { tercero_id: terceroId, visible }
+    );
+  }
+
 }
 
 // Dentro de EstudiantesService (class EstudiantesService { ... })
-
-

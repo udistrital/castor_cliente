@@ -1,1 +1,47 @@
-/* Estilos para explorar estudiantes */
+.explorar-card {
+  margin: 16px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.table-wrapper {
+  margin-top: 12px;
+}
+
+.empty-state {
+  padding: 28px 12px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.empty-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+}
+
+.empty-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.empty-subtitle {
+  font-size: 13px;
+  color: rgba(0,0,0,0.6);
+}
+
+.text-right {
+  text-align: right;
+}

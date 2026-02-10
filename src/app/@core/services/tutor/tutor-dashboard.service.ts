@@ -103,6 +103,14 @@ export class TutorDashboardService {
     return this.rm.get('castor_mid', `ofertas?tutor_id=${tutorId}`);
   }
 
+  getOfertaById(ofertaId: number): Observable<any> {
+    return this.rm.get('castor_mid', `ofertas/${ofertaId}`);
+  }
+
+  getDashboardTutor(tutorId: number): Observable<any> {
+    return this.rm.get('castor_mid', `tutores/dashboard?tutor_id=${tutorId}`);
+  }
+
   // Alias por compatibilidad si tu componente aún llama crearEmpresa()
   crearEmpresa(body: UpsertTutorEmpresaRequest): Observable<any> {
     return this.upsertEmpresa(body);
