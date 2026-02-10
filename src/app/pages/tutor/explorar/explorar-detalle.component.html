@@ -1,1 +1,227 @@
-<h1>Detalle de Estudiante</h1>
+<mat-card class="page-card">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button mat-stroked-button color="primary" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        {{ fromInvitaciones ? 'Volver a invitaciones' : 'Volver' }}
+      </button>
+
+      <button mat-stroked-button color="primary" (click)="goDashboard()">
+        <mat-icon>dashboard</mat-icon>
+        Dashboard
+      </button>
+    </div>
+
+    <div class="topbar-right">
+      <span class="subtitle">
+        {{
+          from === 'postulaciones'
+            ? 'Vista desde postulaciones'
+            : (from === 'invitaciones' ? 'Vista desde invitaciones' : 'Explorar estudiantes')
+        }}
+      </span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="state" *ngIf="loading">Cargando perfil...</div>
+    <div class="state" *ngIf="!loading && !perfil">No encontramos información para este perfil.</div>
+
+    <div class="grid" *ngIf="!loading && perfil">
+      <!-- Perfil -->
+      <mat-card class="panel">
+        <mat-card-header>
+          <mat-card-title class="title">Detalle de estudiante</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="profile-header">
+            <div class="avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+
+            <div class="identity">
+              <div class="name">{{ getNombre() }}</div>
+              <div class="meta">
+                <span class="meta-item">
+                  <mat-icon>school</mat-icon>
+                  {{ getCarrera() }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Habilidades chips -->
+          <div class="section">
+            <div class="section-title">Habilidades</div>
+
+            <div class="chips" *ngIf="habilidadesChips.length; else noHabs">
+              <mat-chip-listbox>
+                <mat-chip-option *ngFor="let h of habilidadesChips" selected>
+                  {{ h }}
+                </mat-chip-option>
+              </mat-chip-listbox>
+            </div>
+
+            <ng-template #noHabs>
+              <div class="muted">—</div>
+            </ng-template>
+          </div>
+
+          <!-- Resumen tipo quote -->
+          <div class="section">
+            <div class="section-title">Resumen</div>
+            <div class="quote">
+              <mat-icon class="quote-icon">format_quote</mat-icon>
+              <div class="quote-text">{{ getResumen() }}</div>
+            </div>
+          </div>
+
+          <!-- CV -->
+          <div class="actions-row">
+            <button
+              mat-raised-button
+              color="primary"
+              (click)="verHojaDeVida()"
+              [disabled]="!perfil?.cv_documento_id"
+            >
+              <mat-icon>picture_as_pdf</mat-icon>
+              Ver hoja de vida
+            </button>
+
+            <span class="hint" *ngIf="!perfil?.cv_documento_id">
+              Sin hoja de vida adjunta
+            </span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Acciones Postulación -->
+      <mat-card class="panel" *ngIf="from === 'postulaciones'">
+        <mat-card-header>
+          <mat-card-title class="title">Acciones de postulación</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="status-row">
+            <span class="status-label">Estado actual</span>
+            <mat-chip
+              selected
+              class="estado-chip"
+              [ngClass]="postulacionLoading ? 'chip-default' : getEstadoChipClass()"
+            >
+              {{ postulacionLoading ? 'Cargando...' : getEstadoPostulacionLabel() }}
+            </mat-chip>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Botón primario + secundarios -->
+          <div class="btn-row">
+            <!-- Primario (depende del estado) -->
+            <button
+              *ngIf="primaryAction === 'PRESELECCIONAR'"
+              mat-raised-button color="primary"
+              (click)="preseleccionar()"
+              [disabled]="postulacionLoading || !canPreseleccionar()"
+              [matTooltip]="getTooltipAccion('PRESELECCIONAR')"
+              [matTooltipDisabled]="!(getTooltipAccion('PRESELECCIONAR') || '').length"
+            >
+              <mat-icon>playlist_add_check</mat-icon>
+              Preseleccionar
+            </button>
+
+            <button
+              *ngIf="primaryAction === 'SELECCIONAR'"
+              mat-raised-button color="primary"
+              (click)="seleccionar()"
+              [disabled]="postulacionLoading || !canSeleccionar()"
+              [matTooltip]="getTooltipAccion('SELECCIONAR')"
+              [matTooltipDisabled]="!(getTooltipAccion('SELECCIONAR') || '').length"
+            >
+              <mat-icon>check_circle</mat-icon>
+              Seleccionar
+            </button>
+
+            <!-- Secundarios -->
+            <button
+              mat-stroked-button color="primary"
+              *ngIf="primaryAction !== 'PRESELECCIONAR'"
+              (click)="preseleccionar()"
+              [disabled]="postulacionLoading || !canPreseleccionar()"
+              [matTooltip]="getTooltipAccion('PRESELECCIONAR')"
+              [matTooltipDisabled]="!(getTooltipAccion('PRESELECCIONAR') || '').length"
+            >
+              <mat-icon>playlist_add_check</mat-icon>
+              Preseleccionar
+            </button>
+
+            <button
+              mat-stroked-button color="primary"
+              *ngIf="primaryAction !== 'SELECCIONAR'"
+              (click)="seleccionar()"
+              [disabled]="postulacionLoading || !canSeleccionar()"
+              [matTooltip]="getTooltipAccion('SELECCIONAR')"
+              [matTooltipDisabled]="!(getTooltipAccion('SELECCIONAR') || '').length"
+            >
+              <mat-icon>check_circle</mat-icon>
+              Seleccionar
+            </button>
+
+            <button
+              mat-stroked-button color="warn"
+              (click)="descartar()"
+              [disabled]="postulacionLoading || !canDescartar()"
+              [matTooltip]="getTooltipAccion('DESCARTAR')"
+              [matTooltipDisabled]="!(getTooltipAccion('DESCARTAR') || '').length"
+            >
+              <mat-icon>block</mat-icon>
+              Descartar
+            </button>
+          </div>
+
+          <div class="callout" *ngIf="!postulacionLoading && !canGestionarPostulacion()">
+            <mat-icon>info</mat-icon>
+            <div>La oferta no permite gestionar postulaciones en este estado.</div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Invitar (solo explorar) -->
+      <ng-container *ngIf="!fromInvitaciones">
+        <mat-card class="panel" *ngIf="canInvitar">
+          <mat-card-header>
+            <mat-card-title class="title">Invitar estudiante</mat-card-title>
+          </mat-card-header>
+
+          <mat-card-content>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Oferta</mat-label>
+              <mat-select [(ngModel)]="ofertaSeleccionada" [disabled]="!canInvitar">
+                <mat-option [value]="null">Sin oferta</mat-option>
+                <mat-option *ngFor="let oferta of ofertasTutor" [value]="oferta?.id">
+                  {{ oferta?.titulo || ('Oferta #' + oferta?.id) }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Mensaje</mat-label>
+              <textarea matInput rows="4" [(ngModel)]="mensaje" [disabled]="!canInvitar"></textarea>
+            </mat-form-field>
+
+            <div class="actions-row">
+              <button mat-raised-button color="primary" (click)="enviarInvitacion()" [disabled]="!canInvitar">
+                <mat-icon>send</mat-icon>
+                Enviar invitación
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </ng-container>
+    </div>
+  </div>
+</mat-card>

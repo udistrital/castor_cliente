@@ -24,7 +24,10 @@ type EstadoPostulacion =
 interface DialogData {
   postulacionId: number;
   estadoActual: EstadoPostulacion;
+  tutorId: number;
 }
+
+type AccionPayload = { accion: string; tutor_id?: number; comentario?: string | null };
 
 @Component({
   selector: 'app-postulacion-accion-dialog',
@@ -90,15 +93,15 @@ interface DialogData {
   `],
 })
 export class PostulacionAccionDialogComponent {
-  accionesDisponibles: string[] = [];
+  accionesDisponibles: Array<'VISTO' | 'PRESELECCIONAR' | 'SELECCIONAR' | 'DESCARTAR'> = [];
   accionSeleccionada?: string;
   comentario = '';
   loading = false;
 
-  private readonly accionesPermitidas: Record<string, string[]> = {
-    PSPO_CTR: ['PSRV_CTR', 'PSPR_CTR', 'PSSE_CTR', 'PSRJ_CTR'],
-    PSRV_CTR: ['PSPR_CTR', 'PSSE_CTR', 'PSRJ_CTR'],
-    PSPR_CTR: ['PSSE_CTR', 'PSRJ_CTR'],
+  private readonly accionesPermitidas: Record<string, Array<'VISTO' | 'PRESELECCIONAR' | 'SELECCIONAR' | 'DESCARTAR'>> = {
+    PSPO_CTR: ['VISTO', 'PRESELECCIONAR', 'SELECCIONAR', 'DESCARTAR'],
+    PSRV_CTR: ['PRESELECCIONAR', 'SELECCIONAR', 'DESCARTAR'],
+    PSPR_CTR: ['SELECCIONAR', 'DESCARTAR'],
   };
 
   constructor(
@@ -119,10 +122,12 @@ export class PostulacionAccionDialogComponent {
       return;
     }
     this.loading = true;
-    this.postulacionesService.accion(this.data.postulacionId, {
+    const payload: AccionPayload = {
       accion: this.accionSeleccionada,
-      comentario: this.comentario,
-    }).pipe(
+      tutor_id: this.data.tutorId,
+      comentario: this.comentario || null,
+    };
+    this.postulacionesService.accion(this.data.postulacionId, payload).pipe(
       finalize(() => this.loading = false)
     ).subscribe({
       next: () => this.dialogRef.close(true),

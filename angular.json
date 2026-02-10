@@ -148,7 +148,8 @@
               "buildTarget": "castor-cliente:build:production"
             },
             "development": {
-              "buildTarget": "castor-cliente:build:development"
+              "buildTarget": "castor-cliente:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           }
         },

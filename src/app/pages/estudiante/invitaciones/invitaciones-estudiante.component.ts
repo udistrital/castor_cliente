@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -18,6 +18,7 @@ import {
 
 import { TokenService } from 'src/app/@core/services/auth/token.service';
 import { UserContextService } from 'src/app/@core/services/user-context.service';
+import { EstudianteDashboardService } from 'src/app/@core/services/estudiante-dashboard.service'; // ✅
 
 type EstadoChip = { label: string; value: string | null };
 
@@ -42,32 +43,57 @@ export class InvitacionesEstudianteComponent implements OnInit {
   page = 1;
   size = 10;
 
-  // filtro
   estado: string | null = null;
 
-  // UI
   cargando = false;
   expandedId: number | null = null;
 
-  // chips (puedes ajustar labels si ya tienes parámetro bonito)
+  // ✅ reglas globales
+  pasanteActivo = false;
+  existeAceptada = false;
+
   estadoChips: EstadoChip[] = [
     { label: 'Todas', value: null },
-    { label: 'Enviadas', value: 'ENVIADA' },
-    { label: 'Aceptadas', value: 'ACEPTADA' },
-    { label: 'Rechazadas', value: 'RECHAZADA' },
-    { label: 'Expiradas', value: 'EXPIRADA' },
-    { label: 'Canceladas', value: 'CANCELADA' },
+    { label: 'Enviadas', value: 'INV_ENV_CTR' },
+    { label: 'Aceptadas', value: 'INV_ACE_CTR' },
+    { label: 'Rechazadas', value: 'INV_REC_CTR' },
+    { label: 'Expiradas', value: 'INV_EXP_CTR' },
+    { label: 'Canceladas', value: 'INV_CAN_CTR' },
   ];
 
   constructor(
     private invitacionesService: InvitacionesEstudianteService,
     private token: TokenService,
     private userContext: UserContextService,
+    private dashboardService: EstudianteDashboardService, // ✅
     private router: Router,
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
-    this.load(1);
+    void this.bootstrapFlagsAndLoad();
+  }
+
+  private async bootstrapFlagsAndLoad(): Promise<void> {
+    const estudianteId = this.resolveTerceroIdAsEstudianteId();
+    if (!estudianteId) {
+      console.warn('[INVITACIONES] No pude resolver estudianteId (tercero_id).');
+      return;
+    }
+
+    // 1) Pasante activo (desde dashboard MID, igual que Home)
+    try {
+      const dash = await firstValueFrom(
+        this.dashboardService.getDashboard(estudianteId).pipe(catchError(() => of(null))),
+      );
+      const resumen: any = (dash as any)?.resumen ?? {};
+      this.pasanteActivo = Boolean(resumen?.pasante_activo);
+    } catch {
+      this.pasanteActivo = false; // fallback seguro
+    }
+
+    // 2) Cargar bandeja
+    await this.load(1);
   }
 
   async load(page = this.page): Promise<void> {
@@ -100,7 +126,9 @@ export class InvitacionesEstudianteComponent implements OnInit {
       this.invitaciones = resp?.items ?? [];
       this.total = resp?.total ?? 0;
 
-      // si lo que estaba expandido ya no existe, colapsa
+      // ✅ si existe alguna aceptada, bloquea acciones globalmente
+      this.existeAceptada = this.invitaciones.some((x) => this.isAceptada(x));
+
       if (this.expandedId != null && !this.invitaciones.some((x) => x?.id === this.expandedId)) {
         this.expandedId = null;
       }
@@ -112,13 +140,7 @@ export class InvitacionesEstudianteComponent implements OnInit {
   setEstadoFilter(value: string | null): void {
     this.estado = value;
     this.expandedId = null;
-    this.load(1);
-  }
-
-  toggleDetalle(inv: InvitacionEstudianteItem): void {
-    const id = Number((inv as any)?.id ?? 0);
-    if (!id) return;
-    this.expandedId = this.expandedId === id ? null : id;
+    void this.load(1);
   }
 
   goDetalle(id: number): void {
@@ -130,6 +152,8 @@ export class InvitacionesEstudianteComponent implements OnInit {
 
   async aceptar(invId: number, evt?: Event): Promise<void> {
     evt?.stopPropagation();
+    if (!this.canActById(invId)) return;
+
     const terceroId = this.resolveTerceroIdAsEstudianteId();
     if (!terceroId) return;
 
@@ -147,6 +171,8 @@ export class InvitacionesEstudianteComponent implements OnInit {
 
   async rechazar(invId: number, evt?: Event): Promise<void> {
     evt?.stopPropagation();
+    if (!this.canActById(invId)) return;
+
     const terceroId = this.resolveTerceroIdAsEstudianteId();
     if (!terceroId) return;
 
@@ -162,30 +188,45 @@ export class InvitacionesEstudianteComponent implements OnInit {
     await this.load(this.page);
   }
 
+  // ✅ habilita/deshabilita por invitación + reglas globales
   canAct(inv: any): boolean {
-    const raw = String(inv?.estado_raw ?? inv?.estado ?? '').toUpperCase().trim();
-    return raw === 'ENVIADA';
+    if (this.pasanteActivo) return false;
+    if (this.existeAceptada) return false;
+    return this.isEnviada(inv);
   }
 
-  // ---- helpers visuales ----
-
-  getTitle(inv: any): string {
-    return (
-      String(inv?.oferta_resumen?.titulo ?? '').trim() ||
-      String(inv?.oferta ?? '').trim() ||
-      (inv?.oferta_pasantia_id ? `Oferta #${inv.oferta_pasantia_id}` : `Invitación #${inv?.id ?? '—'}`)
-    );
+  private canActById(invId: number): boolean {
+    const inv = this.invitaciones.find((x) => x.id === invId);
+    return inv ? this.canAct(inv) : false;
   }
 
-  getEstadoLabel(inv: any): string {
-    // si ya llega estado_det.nombre, úsalo; si no, usa estado
-    const det = String(inv?.estado_det?.nombre ?? '').trim();
-    return det || String(inv?.estado ?? '—').trim() || '—';
+  // ---- colores ----
+
+  getCardTone(inv: any): string {
+    if (this.isAceptada(inv)) return 'tone-accepted';
+    if (this.isRechazada(inv)) return 'tone-rejected';
+    if (this.isEnviada(inv)) return 'tone-sent';
+    return 'tone-default';
   }
 
-  getFecha(inv: any): any {
-    // tu response trae fecha_creacion/fecha_estado (y en home usabas inv.fecha)
-    return inv?.fecha ?? inv?.fecha_estado ?? inv?.fecha_creacion ?? null;
+  // ---- normalización de estado ----
+  private getEstadoRaw(inv: any): string {
+    return String(inv?.estado_det?.code ?? inv?.estado_raw ?? inv?.estado ?? '').toUpperCase().trim();
+  }
+
+  private isEnviada(inv: any): boolean {
+    const s = this.getEstadoRaw(inv);
+    return s === 'ENVIADA' || s === 'INV_ENV_CTR';
+  }
+
+  private isAceptada(inv: any): boolean {
+    const s = this.getEstadoRaw(inv);
+    return s === 'ACEPTADA' || s === 'INV_ACE_CTR';
+  }
+
+  private isRechazada(inv: any): boolean {
+    const s = this.getEstadoRaw(inv);
+    return s === 'RECHAZADA' || s === 'INV_REC_CTR';
   }
 
   displayFecha(raw: any): string {
@@ -208,27 +249,49 @@ export class InvitacionesEstudianteComponent implements OnInit {
   }
 
   prevPage(): void {
-    if (this.page > 1) this.load(this.page - 1);
+    if (this.page > 1) void this.load(this.page - 1);
   }
 
   nextPage(): void {
-    if (this.page < this.totalPages) this.load(this.page + 1);
+    if (this.page < this.totalPages) void this.load(this.page + 1);
+  }
+
+  // ✅ topbar
+  volver(): void {
+    this.router.navigateByUrl('/pages/home');
+  }
+
+  irDashboard(): void {
+    this.router.navigateByUrl('/pages/home');
   }
 
   private resolveTerceroIdAsEstudianteId(): number | null {
-    const ctx = this.userContext.getEstudianteContext();
-    const currentUser = this.token.currentUser as any;
+  const ctx = this.userContext.getEstudianteContext();
+  const currentUser = this.token.currentUser as any;
 
-    const terceroId =
-      ctx?.tercero_id ??
-      currentUser?.rawTokenPayload?.tercero_id ??
-      currentUser?.tercero_id ??
-      null;
+  // ✅ 1) query param (lo que te está llegando)
+  const qp = this.route.snapshot.queryParamMap.get('tercero_id');
 
-    const id = Number(terceroId);
-    if (!Number.isFinite(id) || id <= 0) return null;
-    return id;
+  // ✅ 2) localStorage (por si existe)
+  let storedTercero: any = null;
+  try {
+    const raw = localStorage.getItem('castor_estudiante_ctx');
+    storedTercero = raw ? JSON.parse(raw)?.tercero_id : null;
+  } catch {
+    storedTercero = null;
   }
 
-  
+  const terceroId =
+    qp ??
+    ctx?.tercero_id ??
+    storedTercero ??
+    currentUser?.rawTokenPayload?.tercero_id ??
+    currentUser?.tercero_id ??
+    null;
+
+  const id = Number(terceroId);
+  if (!Number.isFinite(id) || id <= 0) return null;
+  return id;
+}
+
 }

@@ -1,0 +1,98 @@
+<div class="page">
+  <div class="header">
+    <button mat-stroked-button class="back" (click)="volver()">
+      <mat-icon>arrow_back</mat-icon>
+      Volver
+    </button>
+    <div class="title">Detalle invitación</div>
+  </div>
+
+  <mat-progress-bar *ngIf="cargando" mode="indeterminate"></mat-progress-bar>
+
+  <mat-card class="error" *ngIf="error && !cargando">
+    <mat-icon>error_outline</mat-icon>
+    <div>{{ error }}</div>
+  </mat-card>
+
+  <div class="skeleton" *ngIf="cargando">
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  </div>
+
+  <div class="layout" *ngIf="!cargando && invitacion">
+    <div class="col-main">
+      <mat-card class="card estudiante">
+        <mat-card-content>
+          <div class="name">{{ estudianteNombre }}</div>
+          <div class="career" *ngIf="estudianteCarrera">{{ estudianteCarrera }}</div>
+
+          <div class="chips">
+            <span class="chip estado-pill" [ngClass]="estadoClass">{{ estadoLabel }}</span>
+            <span class="chip chip-date">{{ displayFecha(invitacion?.fecha_estado || invitacion?.fecha_creacion) }}</span>
+          </div>
+
+          <div class="message">
+            <div class="label">Mensaje</div>
+            <div class="value">{{ invitacion?.mensaje || '—' }}</div>
+          </div>
+
+          <div class="actions">
+            <button mat-stroked-button color="primary" (click)="goPerfilEstudiante()" [disabled]="!estudiantePerfilId">
+              Ver perfil
+            </button>
+            <button mat-stroked-button color="warn" (click)="cancelar()" [disabled]="!canCancelar()">
+              Cancelar invitación
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="card" *ngIf="invitacion?.oferta_detalle">
+        <mat-card-content>
+          <div class="section-title">Oferta</div>
+          <div class="kv">
+            <div class="k">
+              <div class="label">Título</div>
+              <div class="value">{{ invitacion?.oferta_detalle?.titulo || invitacion?.oferta_resumen?.titulo || '—' }}</div>
+            </div>
+            <div class="k">
+              <div class="label">Estado</div>
+              <div class="value">
+                <span class="chip chip-state">
+                  {{ invitacion?.oferta_detalle?.estado_det?.nombre || invitacion?.oferta_detalle?.estado || '—' }}
+                </span>
+              </div>
+            </div>
+            <div class="k">
+              <div class="label">Publicación</div>
+              <div class="value">{{ displayFecha(invitacion?.oferta_detalle?.fecha_publicacion) }}</div>
+            </div>
+          </div>
+
+          <div class="label" style="margin-top: 10px;">Descripción</div>
+          <div class="value">{{ invitacion?.oferta_detalle?.descripcion || '—' }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="col-side">
+      <mat-card class="card mini" *ngIf="invitacion?.empresa_detalle">
+        <mat-card-content>
+          <div class="section-title">Empresa</div>
+          <div class="value">
+            {{ invitacion?.empresa_detalle?.nombre_completo || '—' }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="card mini" *ngIf="invitacion?.tutor_detalle">
+        <mat-card-content>
+          <div class="section-title">Tutor</div>
+          <div class="value">
+            {{ invitacion?.tutor_detalle?.nombre_completo || '—' }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

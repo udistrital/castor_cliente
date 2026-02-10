@@ -108,8 +108,13 @@ const routes: Routes = [{
         },
         {
           path: 'invitaciones',
-          canActivate: [NavGuard, RoleGuard],
+          
           loadComponent: () => import('./tutor/invitaciones/invitaciones-tutor.component').then(m => m.InvitacionesTutorComponent),
+        },
+        {
+          path: 'invitaciones/:id',
+          
+          loadComponent: () => import('./tutor/invitaciones/invitacion-detalle-tutor.component').then(m => m.InvitacionDetalleTutorComponent),
         },
         {
           path: 'explorar-estudiantes',

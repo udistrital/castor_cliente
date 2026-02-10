@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { firstValueFrom, of } from 'rxjs';
 import { catchError, take } from 'rxjs/operators';
-import Swal from 'sweetalert2';
 
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,6 +18,7 @@ import { EstudiantesService } from '../../@core/services/estudiantes.service';
 import { UserContextService } from '../../@core/services/user-context.service';
 import { PerfilEstudiante } from '../../@core/models/perfil.model';
 import { AcademicService } from 'src/app/@core/services/academica/academic.service';
+import { AlertService } from 'src/app/@core/services/ui/alert.service';
 
 import { OfertasEstudianteService, OfertaDisponibleItem } from 'src/app/@core/services/ofertas-estudiante.service';
 import { InvitacionesEstudianteService, InvitacionEstudianteItem } from 'src/app/@core/services/invitaciones-estudiante.service';
@@ -85,6 +85,8 @@ export class HomeEstudianteComponent implements OnInit {
     private ofertasService: OfertasEstudianteService,
     private invitacionesService: InvitacionesEstudianteService,
     private docs: DocumentosService,
+    // Use AlertService wrapper to avoid Swal runtime errors.
+    private alert: AlertService,
   ) {}
 
   ngOnInit(): void {
@@ -115,8 +117,6 @@ export class HomeEstudianteComponent implements OnInit {
 
       this.codigoEstudiante = codigo ?? '';
 
-      this.loading.show('Cargando tu perfil…');
-
       if (terceroId) {
         try {
           this.perfil = await firstValueFrom(this.estudiantes.getMiPerfil(terceroId));
@@ -130,7 +130,9 @@ export class HomeEstudianteComponent implements OnInit {
         }
       }
 
-      this.loading.hide();
+      if (this.perfil) {
+        this.perfilVisible = !!this.perfil.visible;
+      }
 
       if (!this.perfil) return;
 
@@ -146,8 +148,7 @@ export class HomeEstudianteComponent implements OnInit {
 
     } catch (error) {
       console.error('[HOME ESTUDIANTE] Error cargando perfil', error);
-      this.loading.hide();
-      Swal.fire('Error', 'No pudimos cargar tu perfil. Intenta más tarde.', 'error');
+      this.alert.fire('Error', 'No pudimos cargar tu perfil. Intenta más tarde.', 'error');
     }
   }
 
@@ -175,7 +176,9 @@ export class HomeEstudianteComponent implements OnInit {
       const resumen: EstudianteDashboardResumen | undefined = dashboard?.resumen;
       this.pasanteActivo = Boolean((resumen as any)?.pasante_activo);
       this.pasantiaActiva = (resumen as any)?.pasantia_activa ?? null;
-      this.perfilVisible = (resumen as any)?.perfil_visible ?? null;
+      if (this.perfilVisible == null) {
+        this.perfilVisible = (resumen as any)?.perfil_visible ?? null;
+      }
 
       // Postulaciones por estado (chips)
       const postulacionesPorEstado =
@@ -335,7 +338,7 @@ export class HomeEstudianteComponent implements OnInit {
     try {
       const docId = (this.perfil as any)?.cv_documento_id;
       if (!docId) {
-        Swal.fire('Sin hoja de vida', 'Aún no tienes un PDF adjunto.', 'info');
+        this.alert.fire('Sin hoja de vida', 'Aún no tienes un PDF adjunto.', 'info');
         return;
       }
       this.loading.show('Abriendo PDF…');
@@ -353,7 +356,7 @@ export class HomeEstudianteComponent implements OnInit {
     } catch (e) {
       console.error('[CV] Error general abriendo PDF', e);
       this.loading.hide();
-      Swal.fire('Error', 'No fue posible abrir el PDF.', 'error');
+      this.alert.fire('Error', 'No fue posible abrir el PDF.', 'error');
     }
   }
 
@@ -362,8 +365,28 @@ export class HomeEstudianteComponent implements OnInit {
   }
 
   goToInvitaciones(): void {
-    this.router.navigateByUrl('/pages/estudiante/invitaciones');
+  const stored = this.readJson('castor_estudiante_ctx');
+  const ctx = this.userContext.getEstudianteContext();
+  const currentUser = this.token.currentUser as any;
+
+  const terceroId =
+    ctx?.tercero_id ??
+    stored?.tercero_id ??
+    currentUser?.rawTokenPayload?.tercero_id ??
+    currentUser?.tercero_id ??
+    null;
+
+  const id = Number(terceroId);
+  if (!Number.isFinite(id) || id <= 0) {
+    this.alert.fire('Error', 'No fue posible identificar tu usuario.', 'error');
+    return;
   }
+
+  this.router.navigate(['/pages/estudiante/invitaciones'], {
+    queryParams: { tercero_id: id },
+  });
+}
+
 
   goToPostulaciones(): void {
     this.router.navigateByUrl('/pages/estudiante/postulaciones');
@@ -404,7 +427,7 @@ export class HomeEstudianteComponent implements OnInit {
 
     const estudianteId = Number(terceroId);
     if (!Number.isFinite(estudianteId) || estudianteId <= 0) {
-      Swal.fire('Error', 'No fue posible identificar tu usuario.', 'error');
+      this.alert.fire('Error', 'No fue posible identificar tu usuario.', 'error');
       return;
     }
 
@@ -419,10 +442,10 @@ export class HomeEstudianteComponent implements OnInit {
       await firstValueFrom(this.estudiantes.putVisibilidad(estudianteId, next));
 
       // Refrescar datos
-      await this.loadPerfil();
       await this.loadDashboard();
+      await this.loadPerfil();
 
-      Swal.fire({
+      this.alert.fire({
         icon: 'success',
         title: 'Listo',
         text: next
@@ -437,7 +460,7 @@ export class HomeEstudianteComponent implements OnInit {
       // 409: ya tiene pasantía activa
       if (e?.status === 409) {
         this.perfilVisible = prev;
-        Swal.fire(
+        this.alert.fire(
           'No permitido',
           'No puedes cambiar la visibilidad mientras tengas una pasantía activa.',
           'warning',
@@ -448,7 +471,7 @@ export class HomeEstudianteComponent implements OnInit {
 
       // Revertir UI
       this.perfilVisible = prev;
-      Swal.fire('Error', 'No pudimos actualizar la visibilidad. Intenta más tarde.', 'error');
+      this.alert.fire('Error', 'No pudimos actualizar la visibilidad. Intenta más tarde.', 'error');
     } finally {
       this.loading.hide();
     }
@@ -478,6 +501,33 @@ export class HomeEstudianteComponent implements OnInit {
 
   displayOfertaTitulo(x: any): string {
     return String(x?.titulo ?? x?.titulo_oferta ?? 'Oferta');
+  }
+
+  getInvitacionEstadoNombre(inv: any): string {
+    const detNombre =
+      inv?.estado_det?.nombre ||
+      inv?.EstadoDet?.Nombre ||
+      inv?.estadoDet?.nombre ||
+      null;
+
+    if (detNombre && String(detNombre).trim()) {
+      return String(detNombre).trim();
+    }
+
+    const raw = String(inv?.estado_raw ?? inv?.estado ?? inv?.Estado ?? '').toUpperCase().trim();
+    const map: Record<string, string> = {
+      INV_ENV_CTR: 'Enviada',
+      INV_ACE_CTR: 'Aceptada',
+      INV_REC_CTR: 'Rechazada',
+      INV_EXP_CTR: 'Expirada',
+      INV_CAN_CTR: 'Cancelada',
+      ENVIADA: 'Enviada',
+      ACEPTADA: 'Aceptada',
+      RECHAZADA: 'Rechazada',
+      EXPIRADA: 'Expirada',
+      CANCELADA: 'Cancelada',
+    };
+    return map[raw] ?? raw;
   }
 
   private normalizePostulacionesPorEstado(

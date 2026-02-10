@@ -59,37 +59,38 @@ export class InvitacionesEstudianteService {
     return this.requestManager
       .get<ApiEnvelope<any>>('castor_mid', 'estudiantes/invitaciones', params)
       .pipe(
-        map((res) => {
-          const data = res?.Data ?? {};
-          const rawItems: any[] = data.items ?? data.invitaciones ?? [];
+       map((res) => {
+  const data = res?.Data ?? {};
+  const rawItems: any[] = data.items ?? data.invitaciones ?? [];
 
-          const items: InvitacionEstudianteItem[] = rawItems.map((it: any) => {
-            const ofertaTitulo =
-              it?.oferta_resumen?.titulo ??
-              it?.oferta ??
-              (it?.oferta_pasantia_id ? `Oferta #${it.oferta_pasantia_id}` : `Invitación #${it?.id}`);
+  const items: InvitacionEstudianteItem[] = rawItems.map((it: any) => {
+    const estadoCode = String(it?.estado ?? it?.estado_raw ?? '').trim().toUpperCase(); // ENVIADA...
+    const estadoDet = it?.estado_det ?? (estadoCode ? { code: estadoCode } : undefined);
+    const estadoNombre = String(estadoDet?.nombre ?? it?.estado_nombre ?? '').trim();
 
-            const fecha =
-              it?.fecha_estado ??
-              it?.fecha_creacion ??
-              it?.fecha ??
-              null;
+    const ofertaTitulo =
+      it?.oferta_resumen?.titulo ??
+      it?.oferta ??
+      (it?.oferta_pasantia_id ? `Oferta #${it.oferta_pasantia_id}` : `Invitación #${it?.id}`);
 
-            return {
-              ...it,
-              estado_raw: (it?.estado_raw ?? it?.estado ?? '').toString(),
-              estado_det: it?.estado_det ?? (it?.estado ? { code: it.estado } : undefined),
-              estado_nombre: (it?.estado_det?.nombre ?? '').toString().trim() || undefined,
-              estado: (it?.estado_det?.nombre ?? it?.estado ?? '').toString().trim() || undefined,
-              oferta: (ofertaTitulo ?? '').toString().trim() || undefined,
-              fecha: fecha ?? undefined,
-            } as InvitacionEstudianteItem;
-          });
+    const fecha = it?.fecha_estado ?? it?.fecha_creacion ?? it?.fecha ?? null;
 
-          const total = Number(data.total ?? (Array.isArray(items) ? items.length : 0));
+    return {
+      ...it,
+      estado_raw: estadoCode,                 // ✅ para lógica
+      estado: estadoCode || undefined,        // ✅ code (ENVIADA, ACEPTADA...)
+      estado_det: estadoDet,                  // ✅ incluye nombre si viene
+      estado_nombre: estadoNombre || undefined,
 
-          return { items, total, page, size };
-        }),
+      oferta: String(ofertaTitulo ?? '').trim() || undefined,
+      fecha: fecha ?? undefined,
+    } as InvitacionEstudianteItem;
+  });
+
+  const total = Number(data.total ?? (Array.isArray(items) ? items.length : 0));
+  return { items, total, page, size };
+  }),
+ 
       );
   }
 
@@ -100,4 +101,39 @@ export class InvitacionesEstudianteService {
   rechazar(invId: number, terceroId: number): Observable<unknown> {
     return this.requestManager.castorMidPut(`invitaciones/${invId}/rechazar`, { tercero_id: terceroId });
   }
+
+  getDetalle(invId: number, estudianteId: number): Observable<InvitacionEstudianteItem | null> {
+  return this.requestManager
+    .get<ApiEnvelope<any>>('castor_mid', `invitaciones/${invId}`, { tercero_id: estudianteId })
+    .pipe(
+      map((res) => {
+        const it = res?.Data ?? null;
+        if (!it) return null;
+
+        const ofertaTitulo =
+          it?.oferta_resumen?.titulo ??
+          it?.oferta ??
+          (it?.oferta_pasantia_id ? `Oferta #${it.oferta_pasantia_id}` : `Invitación #${it?.id}`);
+
+        const fecha = it?.fecha_estado ?? it?.fecha_creacion ?? it?.fecha ?? null;
+
+        return {
+          ...it,
+          estado_raw: (it?.estado_raw ?? it?.estado ?? '').toString(),
+          estado_det: it?.estado_det ?? (it?.estado ? { code: it.estado } : undefined),
+          estado_nombre: (it?.estado_det?.nombre ?? '').toString().trim() || undefined,
+
+          // IMPORTANTE: aquí NO conviertas "estado" a nombre, deja code + det separados
+          // si tu UI quiere label, usa getEstadoLabel()
+          estado: (it?.estado ?? '').toString().trim() || undefined,
+
+          oferta: (ofertaTitulo ?? '').toString().trim() || undefined,
+          fecha: fecha ?? undefined,
+        } as InvitacionEstudianteItem;
+      }),
+    );
+}
+
+
+
 }

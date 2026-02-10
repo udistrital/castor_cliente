@@ -22,47 +22,50 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Descripción</mat-label>
-          <textarea matInput formControlName="descripcion" rows="3"></textarea>
-          <mat-hint>Opcional</mat-hint>
+          <textarea
+            matInput
+            formControlName="descripcion"
+            rows="4"
+            maxlength="1200"
+            placeholder="Describe la oferta: modalidad, horario, duración, perfil requerido, responsabilidades, ubicación, remuneración (si aplica), tecnologías/herramientas, etc."
+          ></textarea>
+          <mat-hint align="end">{{ (form.value.descripcion || '').length }}/1200</mat-hint>
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Empresa (tercero)</mat-label>
-          <input matInput formControlName="empresa_tercero_id" autocomplete="off" />
-          <mat-hint>Se autocompleta desde tu perfil</mat-hint>
-          <mat-error *ngIf="form.controls.empresa_tercero_id.invalid">Empresa requerida</mat-error>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Modalidad</mat-label>
-          <input matInput formControlName="modalidad" autocomplete="off" />
-          <mat-hint>Opcional</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Estado</mat-label>
-          <mat-select formControlName="estado">
-            <mat-option value="">Por defecto (OPC_CTR)</mat-option>
-            <mat-option value="OPC_CTR">OPC_CTR</mat-option>
-            <mat-option value="OPCUR_CTR">OPCUR_CTR</mat-option>
-            <mat-option value="OPCAN_CTR">OPCAN_CTR</mat-option>
-            <mat-option value="OPFIN_CTR">OPFIN_CTR</mat-option>
-          </mat-select>
-          <mat-hint>Opcional</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Tutor externo</mat-label>
-          <input matInput formControlName="tutor_externo_id" autocomplete="off" />
-          <mat-hint>Se autocompleta desde tu perfil</mat-hint>
-          <mat-error *ngIf="form.controls.tutor_externo_id.invalid">Tutor requerido</mat-error>
-        </mat-form-field>
+        <div class="pc-loading" *ngIf="loadingPC">Cargando proyectos curriculares...</div>
 
         <mat-form-field appearance="outline">
           <mat-label>Proyectos curriculares</mat-label>
-          <input matInput formControlName="proyectos_curriculares" autocomplete="off" />
-          <mat-hint>Opcional. IDs separados por coma: 10, 25, 33</mat-hint>
+          <mat-select
+            multiple
+            formControlName="proyectos_curriculares_ids"
+            [disabled]="loadingPC"
+          >
+            <mat-option disabled>
+              <input
+                matInput
+                placeholder="Buscar proyecto curricular"
+                [(ngModel)]="pcSearch"
+                [ngModelOptions]="{ standalone: true }"
+                (click)="$event.stopPropagation()"
+                (keydown)="$event.stopPropagation()"
+              />
+            </mat-option>
+            <mat-option *ngFor="let pc of filteredPCs()" [value]="pc.id">
+              {{ pc.nombre }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Selecciona uno o varios proyectos curriculares</mat-hint>
         </mat-form-field>
+
+        <mat-chip-listbox class="pc-chips" *ngIf="pcsSeleccionados.length > 0">
+          <mat-chip *ngFor="let id of pcsSeleccionados" [removable]="true" (removed)="removePc(id)">
+            {{ displayPcName(id) }}
+            <button matChipRemove aria-label="Remover proyecto">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip>
+        </mat-chip-listbox>
 
         <div class="tutor-actions">
           <button mat-stroked-button type="button" (click)="onCancel()">Cancelar</button>

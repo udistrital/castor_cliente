@@ -9,9 +9,7 @@ import { AppComponent } from './app.component';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { environment } from '../environments/environment';
 import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { ApiBaseInterceptor } from './@core/interceptors/api-base.interceptor';
 import { LoaderInterceptor } from './@core/services/http/loader.interceptor';
-import { JwtInterceptor } from './@core/interceptors/jwt.interceptor';
 import { TokenService } from './@core/services/auth/token.service';
 import { GlobalLoadingOverlayComponent } from './@shared/components/global-loading-overlay.component';
 
@@ -25,9 +23,14 @@ import { GlobalLoadingOverlayComponent } from './@shared/components/global-loadi
         BrowserModule,
         AppRoutingModule,
         BrowserAnimationsModule,
+        MatSnackBarModule,
         GlobalLoadingOverlayComponent,
-        ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })], providers: [{ provide: LocationStrategy, useClass: HashLocationStrategy }, provideHttpClient(withInterceptorsFromDi()), { provide: APP_INITIALIZER, useFactory: (token: TokenService) => () => token.init(), deps: [TokenService], multi: true }, { provide: HTTP_INTERCEPTORS, useClass: ApiBaseInterceptor, multi: true }, { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true }, { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true }] })
+        ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production })], providers: [
+        { provide: LocationStrategy, useClass: HashLocationStrategy },
+        // Provide HttpClient only once to avoid interceptor recursion from feature modules.
+        provideHttpClient(withInterceptorsFromDi()),
+        { provide: APP_INITIALIZER, useFactory: (token: TokenService) => () => token.init(), deps: [TokenService], multi: true },
+        // Register loader interceptor once to avoid duplicate loading toggles.
+        { provide: HTTP_INTERCEPTORS, useClass: LoaderInterceptor, multi: true }
+    ] })
 export class AppModule { }
-
-
-

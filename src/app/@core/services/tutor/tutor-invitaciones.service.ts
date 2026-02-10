@@ -1,34 +1,56 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, map } from 'rxjs';
+import { RequestManager } from 'src/app/pages/services/requestManager';
+import { ApiEnvelope } from '../../models/comunes.model';
 
 @Injectable({ providedIn: 'root' })
 export class TutorInvitacionesService {
-  private readonly tutoresPath = '/v1/tutores';
-  private readonly invitacionesPath = '/v1/invitaciones';
+  constructor(private rm: RequestManager) {}
 
-  constructor(private http: HttpClient) {}
+  listarInvitaciones(
+    tutorId: number,
+    estado?: string | null,
+    page = 1,
+    size = 10,
+  ): Observable<{ items: any[]; total: number; page: number; size: number }> {
+    const params: Record<string, unknown> = { tutor_id: tutorId, page, size };
+    if (estado) {
+      params.estado = estado;
+    }
 
-  obtenerInvitaciones<T = any>(): Observable<T> {
-    return this.http.get<T>(`${this.tutoresPath}/invitaciones`).pipe(
-      catchError(this.handleError)
-    );
+    return this.rm
+      .get<ApiEnvelope<any>>('castor_mid', 'tutores/invitaciones', params)
+      .pipe(map((res) => this.normalizeList(res?.Data ?? res, page, size)));
   }
 
-  aceptarInvitacion<T = any>(invitacionId: string | number, payload: unknown = {}): Observable<T> {
-    const id = encodeURIComponent(String(invitacionId));
-    return this.http.put<T>(`${this.invitacionesPath}/${id}/aceptar`, payload).pipe(
-      catchError(this.handleError)
-    );
+  detalleInvitacion(tutorId: number, invitacionId: number): Observable<any> {
+    const params: Record<string, unknown> = { tutor_id: tutorId };
+    return this.rm
+      .get<ApiEnvelope<any>>('castor_mid', `tutores/invitaciones/${invitacionId}`, params)
+      .pipe(map((res) => res?.Data ?? res));
   }
 
-  rechazarInvitacion<T = any>(invitacionId: string | number, payload: unknown = {}): Observable<T> {
-    const id = encodeURIComponent(String(invitacionId));
-    return this.http.put<T>(`${this.invitacionesPath}/${id}/rechazar`, payload).pipe(
-      catchError(this.handleError)
-    );
+  enviarInvitacion(
+    tutorId: number,
+    perfilId: number,
+    payload: { oferta_pasantia_id?: number | null; mensaje?: string | null },
+  ): Observable<any> {
+    const path = `explorar/estudiantes/${encodeURIComponent(perfilId)}/invitar?tutor_id=${encodeURIComponent(tutorId)}`;
+    const body = {
+      mensaje: payload?.mensaje ?? null,
+      oferta_pasantia_id: payload?.oferta_pasantia_id ?? null,
+    };
+    return this.rm.castorMidPost(path, body);
   }
 
-  private handleError = (error: any): Observable<never> => throwError(() => error);
+  private normalizeList(raw: any, page: number, size: number) {
+    const data = raw ?? {};
+    const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+    return {
+      items,
+      total: Number(data?.total ?? items.length),
+      page: Number(data?.page ?? page),
+      size: Number(data?.size ?? size),
+    };
+  }
 }

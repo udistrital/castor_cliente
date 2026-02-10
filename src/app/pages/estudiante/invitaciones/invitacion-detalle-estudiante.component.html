@@ -1,14 +1,143 @@
-<mat-card>
-  <mat-card-header>
-    <mat-card-title>Detalle invitación</mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    <p>ID: {{ id ?? '—' }}</p>
-  </mat-card-content>
-  <mat-card-actions>
-    <button mat-stroked-button color="primary" (click)="volver()">
+<div class="page">
+
+  <!-- Header superior (volver) -->
+  <div class="page-header">
+    <button mat-stroked-button class="btn-back" (click)="volver()">
       <mat-icon>arrow_back</mat-icon>
       Volver
     </button>
-  </mat-card-actions>
-</mat-card>
+
+    <div class="header-title">
+      <div class="title">Detalle de invitación</div>
+      <div class="subtitle" *ngIf="invitacion">
+        ID #{{ invitacion?.id }} · {{ displayFecha(invitacion?.fecha_estado || invitacion?.fecha_creacion) }}
+      </div>
+    </div>
+  </div>
+
+  <!-- estados -->
+  <div *ngIf="cargando" class="state">Cargando…</div>
+  <div *ngIf="!cargando && error" class="state error">{{ error }}</div>
+
+  <ng-container *ngIf="!cargando && invitacion">
+
+    <!-- Card principal con colores por estado -->
+    <mat-card class="card invitacion-card" [ngClass]="estadoCss()">
+      <mat-card-content>
+
+        <div class="row top-row">
+          <div class="left">
+            <div class="badge-line">
+              <mat-chip class="chip-estado" selected>
+                {{ estadoNombre() }}
+              </mat-chip>
+            </div>
+
+            <div class="mensaje">
+              <div class="label">Mensaje</div>
+              <div class="value">{{ invitacion?.mensaje || '—' }}</div>
+            </div>
+          </div>
+
+          <div class="right actions">
+            <button
+              mat-flat-button
+              class="btn-aceptar"
+              (click)="aceptar()"
+              [disabled]="!canAct()"
+              matTooltip="Aceptar invitación"
+            >
+              <mat-icon>check_circle</mat-icon>
+              Aceptar
+            </button>
+
+            <button
+              mat-stroked-button
+              class="btn-rechazar"
+              (click)="rechazar()"
+              [disabled]="!canAct()"
+              matTooltip="Rechazar invitación"
+            >
+              <mat-icon>cancel</mat-icon>
+              Rechazar
+            </button>
+
+            <div class="hint" *ngIf="!canAct() && disabledReason">
+              {{ disabledReason }}
+            </div>
+          </div>
+        </div>
+
+        <mat-divider class="divider"></mat-divider>
+
+        <!-- Quién invita -->
+        <div class="section">
+          <div class="section-title">
+            <mat-icon>business</mat-icon>
+            Quién te invita
+          </div>
+
+          <div class="grid2">
+            <div class="kv">
+              <div class="k">Empresa</div>
+              <div class="v">{{ empresaNombre }}</div>
+            </div>
+
+            <div class="kv">
+              <div class="k">Tutor</div>
+              <div class="v">{{ tutorNombre }}</div>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider class="divider"></mat-divider>
+
+        <!-- Oferta -->
+        <div class="section">
+          <div class="section-title">
+            <mat-icon>work</mat-icon>
+            Oferta de pasantía
+          </div>
+
+          <div class="oferta-box" *ngIf="oferta; else ofertaMin">
+            <div class="oferta-head">
+              <div class="oferta-titulo">{{ ofertaTitulo }}</div>
+              <mat-chip class="chip-oferta" selected>
+                {{ ofertaEstadoNombre }}
+              </mat-chip>
+            </div>
+
+            <div class="oferta-meta">
+              <div class="kv">
+                <div class="k">Fecha publicación</div>
+                <div class="v">{{ displayFecha(oferta?.fecha_publicacion) }}</div>
+              </div>
+
+              <div class="kv">
+                <div class="k">ID oferta</div>
+                <div class="v">#{{ oferta?.id }}</div>
+              </div>
+            </div>
+
+            <div class="oferta-desc">
+              <div class="k">Descripción</div>
+              <div class="v">{{ oferta?.descripcion || '—' }}</div>
+            </div>
+          </div>
+
+          <ng-template #ofertaMin>
+            <div class="oferta-box">
+              <div class="oferta-titulo">{{ ofertaTitulo }}</div>
+              <div class="oferta-desc">
+                <div class="k">ID oferta</div>
+                <div class="v">#{{ invitacion?.oferta_pasantia_id }}</div>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+
+      </mat-card-content>
+    </mat-card>
+
+  </ng-container>
+</div>

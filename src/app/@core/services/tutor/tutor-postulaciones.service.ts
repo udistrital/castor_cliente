@@ -1,32 +1,83 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { Observable, map } from 'rxjs';
+import { RequestManager } from 'src/app/pages/services/requestManager';
+import { ApiEnvelope } from '../../models/comunes.model';
 
 @Injectable({ providedIn: 'root' })
 export class TutorPostulacionesService {
-  private readonly ofertasPath = '/v1/ofertas';
-  private readonly postulacionesPath = '/v1/postulaciones';
+  constructor(private rm: RequestManager) {}
 
-  constructor(private http: HttpClient) {}
+  listarPostulacionesOferta(
+    ofertaId: number,
+    tutorId: number,
+    estado?: string | null,
+    page = 1,
+    size = 10,
+  ): Observable<{ items: any[]; total: number; page: number; size: number }> {
+    // Nota: El MID hoy exige tutor_id y oferta_id en path.
+    // page/size/estado pueden ser ignorados por el backend, pero no rompen.
+    const params: Record<string, unknown> = { tutor_id: tutorId, page, size };
+    if (estado) params.estado = estado;
 
-  obtenerPostulaciones<T = any>(ofertaId: string | number): Observable<T> {
-    const id = encodeURIComponent(String(ofertaId));
-    return this.http.get<T>(`${this.ofertasPath}/${id}/postulaciones`).pipe(
-      catchError(this.handleError)
+    return this.rm
+      .get<ApiEnvelope<any>>('castor_mid', `ofertas/${ofertaId}/postulaciones`, params)
+      .pipe(map((res) => this.normalizeList(res?.Data ?? res, page, size)));
+  }
+
+  accionPostulacion(
+    postulacionId: number,
+    tutorId: number,
+    action: 'VISTO' | 'DESCARTAR' | 'PRESELECCIONAR' | 'SELECCIONAR',
+    comentario?: string | null,
+  ): Observable<any> {
+    // El RequestManager no permite params en castorMidPost directamente,
+    // así que mandamos tutor_id por query string.
+    const path = `postulaciones/${postulacionId}/accion?tutor_id=${encodeURIComponent(tutorId)}`;
+    const body: any = { accion: action };
+    if (comentario) body.comentario = comentario;
+
+    return this.rm.castorMidPost(path, body);
+  }
+
+  // Compatibilidad: componentes antiguos envían payload con accion/tutor_id/comentario.
+  accion(
+    postulacionId: number,
+    payload: { accion: string; tutor_id?: number; comentario?: string | null },
+  ): Observable<any> {
+    const action = String(payload?.accion ?? '').trim().toUpperCase();
+    const tutorId = payload?.tutor_id;
+
+    // Requerido por MID: tutor_id. Si no llega, intentamos sin él (pero MID lo rechazará).
+    const qs = tutorId ? `?tutor_id=${encodeURIComponent(tutorId)}` : '';
+    const path = `postulaciones/${postulacionId}/accion${qs}`;
+
+    const body: any = { accion: action };
+    if (payload?.comentario) body.comentario = payload.comentario;
+
+    return this.rm.castorMidPost(path, body);
+  }
+
+  marcarVisto(postulacionId: number, tutorId: number): Observable<any> {
+    return this.rm.castorMidPutRaw(
+      `postulaciones/${postulacionId}/visto`,
+      {},
+      { tutor_id: tutorId }
     );
   }
 
-  accionPostulacion<T = any>(postulacionId: string | number, payload: unknown): Observable<T> {
-    const id = encodeURIComponent(String(postulacionId));
-    return this.http.post<T>(`${this.postulacionesPath}/${id}/accion`, payload).pipe(
-      catchError(this.handleError)
-    );
+  marcarEnRevision(postulacionId: number, tutorId: number): Observable<any> {
+    // Accion VISTO suele mover a PSRV_CTR (en revision) en el MID.
+    return this.accionPostulacion(postulacionId, tutorId, 'VISTO');
   }
 
-  accion<T = any>(postulacionId: string | number, payload: unknown): Observable<T> {
-    return this.accionPostulacion(postulacionId, payload);
+  private normalizeList(raw: any, page: number, size: number) {
+    const data = raw ?? {};
+    const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+    return {
+      items,
+      total: Number(data?.total ?? items.length),
+      page: Number(data?.page ?? page),
+      size: Number(data?.size ?? size),
+    };
   }
-
-  private handleError = (error: any): Observable<never> => throwError(() => error);
 }

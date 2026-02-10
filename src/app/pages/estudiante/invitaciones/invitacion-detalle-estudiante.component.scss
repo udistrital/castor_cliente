@@ -1,19 +1,228 @@
-.mat-card {
-  margin: 16px;
+.page {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.page-card {
-  max-width: 1100px;
-  margin: 24px auto;
-  padding: 14px;
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .btn-back {
+    border-radius: 14px;
+  }
+
+  .header-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+  }
+}
+
+.state {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.04);
+
+  &.error {
+    background: rgba(255, 0, 0, 0.06);
+  }
+}
+
+.card {
   border-radius: 18px;
-  box-shadow: 0 18px 60px rgba(15, 33, 69, 0.10);
+  overflow: hidden;
 }
 
-.muted {
-  opacity: 0.85;
-  color: #7a8699;
-  font-size: 12px;
-  margin: 0;
+.invitacion-card {
+  border: 1px solid rgba(0,0,0,0.08);
+
+  .top-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    @media (max-width: 900px) {
+      flex-direction: column;
+    }
+  }
+
+  .left {
+    flex: 1;
+    min-width: 280px;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 240px;
+
+    .hint {
+      font-size: 12px;
+      opacity: 0.8;
+      line-height: 1.25;
+    }
+  }
+
+  .mensaje {
+    margin-top: 10px;
+
+    .label {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .value {
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 4px;
+      white-space: pre-line;
+    }
+  }
+
+  .divider {
+    margin: 14px 0;
+    opacity: 0.55;
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      opacity: 0.9;
+
+      mat-icon {
+        opacity: 0.85;
+      }
+    }
+  }
+
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .kv {
+    .k {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    .v {
+      margin-top: 4px;
+      font-size: 14px;
+      font-weight: 650;
+    }
+  }
+
+  .oferta-box {
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 16px;
+    padding: 12px;
+    background: rgba(0,0,0,0.02);
+
+    .oferta-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+
+      @media (max-width: 900px) {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    .oferta-titulo {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .oferta-meta {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+
+      @media (max-width: 900px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .oferta-desc {
+      margin-top: 10px;
+
+      .k {
+        font-size: 12px;
+        opacity: 0.7;
+      }
+      .v {
+        margin-top: 4px;
+        font-size: 14px;
+        line-height: 1.35;
+        white-space: pre-line;
+      }
+    }
+  }
 }
 
+/* Chips */
+.chip-estado,
+.chip-oferta {
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+/* ====== Colores por estado (invitación) ====== */
+.estado-enviada {
+  border-left: 8px solid rgba(255, 193, 7, 0.9);
+  background: rgba(255, 193, 7, 0.06);
+}
+
+.estado-aceptada {
+  border-left: 8px solid rgba(76, 175, 80, 0.9);
+  background: rgba(76, 175, 80, 0.08);
+}
+
+.estado-rechazada {
+  border-left: 8px solid rgba(244, 67, 54, 0.9);
+  background: rgba(244, 67, 54, 0.06);
+}
+
+.estado-otro {
+  border-left: 8px solid rgba(33, 150, 243, 0.75);
+  background: rgba(33, 150, 243, 0.05);
+}
+
+/* Botones */
+.btn-aceptar {
+  border-radius: 14px;
+}
+
+.btn-rechazar {
+  border-radius: 14px;
+}

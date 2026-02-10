@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { RequestManager } from 'src/app/pages/services/requestManager';
 
 export interface EstudianteAcademica {
   Codigo: string;
@@ -21,14 +20,13 @@ export interface EstudianteAcademica {
 
 @Injectable({ providedIn: 'root' })
 export class AcademicService {
-  private readonly baseUrl = (environment.API_BASES?.academica || '').replace(/\/?$/, '/');
-
-  constructor(private http: HttpClient) {}
+  constructor(private requestManager: RequestManager) {}
 
   getDatosEstudiantePorCodigo(codigo: string): Observable<EstudianteAcademica | null> {
-    const url = `${this.baseUrl}datos_estudiante/${encodeURIComponent(codigo)}`;
-    console.log('URL ACADEMICA', url);
-    return this.http.get<any>(url).pipe(
+    // Use RequestManager to include auth headers without custom headers.
+    const path = `datos_estudiante/${encodeURIComponent(codigo)}`;
+    console.log('URL ACADEMICA', path);
+    return this.requestManager.academicaGet<any>(path).pipe(
       map((raw) => this.mapearRespuesta(raw)),
       tap((resp) => console.log('[ACADEMICA] datos_estudiante(%s) →', codigo, resp))
     );

@@ -1,1 +1,219 @@
-/* Estilos para detalle de oferta */
+.pst {
+  cursor: pointer;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: #fff;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pst:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.pst:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.pst::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background: rgba(148, 163, 184, 0.8);
+}
+
+.pst-default {
+  background: #fff;
+}
+
+.pst-postulada {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.035);
+}
+
+.pst-postulada::before {
+  background: rgba(37, 99, 235, 0.9);
+}
+
+.pst-revision {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.pst-revision::before {
+  background: rgba(245, 158, 11, 0.95);
+}
+
+.pst-preseleccion {
+  border-color: rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.pst-preseleccion::before {
+  background: rgba(139, 92, 246, 0.95);
+}
+
+.pst-seleccion {
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.pst-seleccion::before {
+  background: rgba(16, 185, 129, 0.95);
+}
+
+.pst-descartada {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.045);
+  opacity: 0.9;
+}
+
+.pst-descartada::before {
+  background: rgba(239, 68, 68, 0.95);
+}
+
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: rgba(15, 23, 42, 0.85);
+  font-weight: 600;
+}
+
+.badge-compact {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.back-link {
+  padding: 0;
+  min-width: auto;
+}
+
+.meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.meta-pill {
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #475569;
+  background: #fff;
+}
+
+.actions-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+
+.postulaciones-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.pst-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.pc-pill {
+  font-size: 11px;
+  color: #475569;
+  background: rgba(148, 163, 184, 0.10);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.pst-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.pst-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pst-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.dense-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  line-height: 30px;
+  border-radius: 10px;
+}
+
+.pst-disabled {
+  opacity: 0.95;
+}
+
+.pst-disabled .pst-actions {
+  opacity: 0.7;
+  pointer-events: none; // evita clicks en botones (igual el [disabled] ya los bloquea)
+}
+
+/* Aviso global cuando la oferta no permite gestionar */
+.offer-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(248, 250, 252, 0.9);
+  color: #475569;
+  font-size: 12px;
+}
+
+.offer-lock-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.95);
+}
+
+/* “modo bloqueado”: se puede abrir perfil, pero no gestionar botones */
+.pst-locked {
+  opacity: 0.92;
+}
+
+.pst-actions-locked {
+  opacity: 0.65;
+  pointer-events: none; /* evita clicks/hover raros, pero el click de la card sigue funcionando */
+}
+
+

@@ -1,33 +1,83 @@
-<mat-card>
-  <mat-card-header>
-    <mat-card-title>Ofertas disponibles</mat-card-title>
-  </mat-card-header>
-  <mat-card-content>
-    <div *ngIf="cargando" class="muted">Cargando ofertas…</div>
-    <ng-container *ngIf="!cargando && ofertas.length; else ofertasVacias">
-      <div class="ofertas-grid">
-        <mat-card class="oferta-card" *ngFor="let oferta of ofertas" (click)="goDetalle(oferta.id)">
-          <mat-card-header>
-            <mat-card-title>{{ oferta.titulo || 'Oferta' }}</mat-card-title>
-            <mat-card-subtitle>{{ oferta.estado_det || '—' }}</mat-card-subtitle>
-          </mat-card-header>
-          <mat-card-content>
-            <p class="descripcion">{{ oferta.descripcion || 'Sin descripción.' }}</p>
-            <p class="muted" *ngIf="oferta.empresa_id">Empresa: {{ oferta.empresa_id }}</p>
-            <p class="muted" *ngIf="oferta.fecha_publicacion">
-              Publicada: {{ oferta.fecha_publicacion }}
-            </p>
-          </mat-card-content>
-          <mat-card-actions>
-            <button mat-stroked-button color="primary" (click)="$event.stopPropagation(); postularme(oferta.id)">
-              Postularme
-            </button>
-          </mat-card-actions>
-        </mat-card>
+<div class="page-shell">
+  <div class="page-bg"></div>
+
+  <div class="page-card">
+    <div class="page-header">
+      <button mat-stroked-button color="primary" class="btn-round" (click)="volver()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+      <div class="title-block">
+        <div class="title">Ofertas disponibles</div>
+        <div class="subtitle">Explora oportunidades abiertas para ti</div>
       </div>
-    </ng-container>
-    <ng-template #ofertasVacias>
-      <p class="muted">Sin ofertas para mostrar por ahora.</p>
-    </ng-template>
-  </mat-card-content>
-</mat-card>
+      <span class="spacer"></span>
+    </div>
+
+    <div class="page-body">
+      <div *ngIf="cargando" class="loading">
+        <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+        <div class="muted">Cargando ofertas…</div>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-card">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <ng-container *ngIf="!cargando && ofertas.length; else ofertasVacias">
+        <div class="ofertas-grid">
+          <mat-card
+            class="oferta-card clickable-card"
+            *ngFor="let oferta of ofertas"
+            (click)="goDetalle(getOfertaId(oferta) || oferta.id)"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="goDetalle(getOfertaId(oferta) || oferta.id)"
+          >
+            <mat-card-content>
+              <div class="card-header">
+                <div class="card-title">
+                  {{ oferta?.titulo || oferta?.nombre || 'Oferta' }}
+                </div>
+                <mat-chip class="estado-chip">
+                  Creada/Publicada
+                </mat-chip>
+              </div>
+
+              <div class="card-meta">
+                <span>{{ getEmpresaNombre(oferta) }}</span>
+                <span class="dot">·</span>
+                <span *ngIf="oferta?.fecha_publicacion">{{ formatDateHuman(oferta?.fecha_publicacion) }}</span>
+              </div>
+
+              <p class="descripcion line-clamp-3">
+                {{ oferta?.descripcion || 'Sin descripción.' }}
+              </p>
+
+              <div class="card-actions">
+                <button mat-stroked-button color="primary" class="btn-round" (click)="$event.stopPropagation(); goDetalle(getOfertaId(oferta) || oferta.id)">
+                  Ver detalle
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="pager">
+          <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Anterior</button>
+          <span class="muted">Página {{ page }} / {{ totalPages }} · Total: {{ total }}</span>
+          <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Siguiente</button>
+        </div>
+      </ng-container>
+
+      <ng-template #ofertasVacias>
+        <div class="empty-state" *ngIf="!errorMessage">
+          <mat-icon>search_off</mat-icon>
+          <div class="empty-title">No hay ofertas disponibles por ahora</div>
+          <div class="muted">Vuelve más tarde para ver nuevas oportunidades.</div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

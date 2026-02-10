@@ -4,9 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TutorPostulacionesService } from 'src/app/@core/services/tutor/tutor-postulaciones.service';
+import { TutorContextService } from 'src/app/@core/services/tutor/tutor-context.service';
+import { AlertService } from 'src/app/@core/services/ui/alert.service';
 import { EstadoChipComponent } from '../components/estado-chip/estado-chip.component';
+import { PostulacionAccionDialogComponent } from '../components/dialogs/postulacion-accion.dialog';
 
 @Component({
   selector: 'app-oferta-postulaciones',
@@ -15,6 +19,7 @@ import { EstadoChipComponent } from '../components/estado-chip/estado-chip.compo
     CommonModule,
     MatButtonModule,
     MatCardModule,
+    MatDialogModule,
     MatProgressSpinnerModule,
     EstadoChipComponent,
   ],
@@ -23,6 +28,7 @@ import { EstadoChipComponent } from '../components/estado-chip/estado-chip.compo
 })
 export class OfertaPostulacionesComponent implements OnInit {
   ofertaId: string | null = null;
+  tutorId: number | null = null;
   loading = true;
   errorMessage = '';
   postulaciones: any[] = [];
@@ -30,7 +36,10 @@ export class OfertaPostulacionesComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private postulacionesService: TutorPostulacionesService
+    private postulacionesService: TutorPostulacionesService,
+    private tutorContext: TutorContextService,
+    private alert: AlertService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -42,21 +51,30 @@ export class OfertaPostulacionesComponent implements OnInit {
         return;
       }
       this.ofertaId = id;
-      void this.loadPostulaciones(id);
+      this.tutorContext.ensureLoaded().subscribe((ctx) => {
+        this.tutorId = ctx?.tutor_id ?? null;
+        if (!this.tutorId) {
+          this.errorMessage = 'No pudimos identificar tu perfil de tutor.';
+          this.loading = false;
+          return;
+        }
+        void this.loadPostulaciones(id, this.tutorId);
+      });
     });
   }
 
-  async loadPostulaciones(ofertaId: string): Promise<void> {
+  async loadPostulaciones(ofertaId: string, tutorId: number): Promise<void> {
     this.loading = true;
     this.errorMessage = '';
     try {
       const response = await firstValueFrom(
-        this.postulacionesService.obtenerPostulaciones(ofertaId)
+        this.postulacionesService.listarPostulacionesOferta(Number(ofertaId), tutorId, undefined, 1, 200)
       );
-      this.postulaciones = this.normalizePostulaciones(response);
+      this.postulaciones = Array.isArray(response?.items) ? response.items : [];
     } catch (error) {
       console.error('[OfertaPostulaciones] load error', error);
       this.errorMessage = 'No pudimos cargar las postulaciones.';
+      this.alert.error('Error', 'No pudimos cargar las postulaciones.');
       this.postulaciones = [];
     } finally {
       this.loading = false;
@@ -106,6 +124,29 @@ export class OfertaPostulacionesComponent implements OnInit {
       postulacion?.Estado ||
       ''
     );
+  }
+
+  openAccionDialog(postulacion: any): void {
+    if (!this.tutorId || !this.ofertaId) {
+      this.alert.error('Error', 'No pudimos identificar tutor u oferta.');
+      return;
+    }
+    const rawId = this.getPostulacionId(postulacion);
+    const parsed = Number(rawId);
+    const postulacionId = Number.isFinite(parsed) ? parsed : parseInt(String(rawId), 10);
+    if (!Number.isFinite(postulacionId)) {
+      this.alert.error('Error', 'No pudimos identificar la postulación.');
+      return;
+    }
+    const estadoActual = this.getEstadoCodigo(postulacion);
+    const ref = this.dialog.open(PostulacionAccionDialogComponent, {
+      data: { postulacionId, estadoActual, tutorId: this.tutorId },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result === true && this.ofertaId && this.tutorId) {
+        void this.loadPostulaciones(this.ofertaId, this.tutorId);
+      }
+    });
   }
 
   private normalizePostulaciones(payload: any): any[] {

@@ -40,6 +40,7 @@ export class RegistroEstudianteComponent implements OnInit {
   documento = '';
   pcId = '';
   pcNombre: string | null = null;
+  pcOikosId: number | null = null;
 
   // 👇 ahora son propiedades normales, nada de signals
   cvFile: File | null = null;
@@ -84,23 +85,26 @@ export class RegistroEstudianteComponent implements OnInit {
       tercero_id: ctx?.tercero_id,
     });
 
+    let terceroId = this.getTerceroIdFromContext();
+    if (!terceroId) {
+      terceroId = await this.resolveTerceroIdFromDocumento(false);
+    }
+    console.log('[REGISTRO] pcId(codigo)=', this.pcId, 'terceroId=', terceroId);
     if (this.pcId) {
       this.loading.show('Resolviendo proyecto curricular…');
       this.catalogos
-        .getNombreProyectoCurricular(this.pcId)
+        .getProyectoCurricularDesdeMidPorCodigo(this.pcId)
         .pipe(finalize(() => this.loading.hide()))
         .subscribe({
-          next: (nombre) => {
-            this.pcNombre = nombre;
+          next: (resp) => {
+            this.pcNombre = resp?.nombre ?? null;
+            this.pcOikosId = resp?.idOikos ?? null;
           },
           error: () => {
             this.pcNombre = null;
+            this.pcOikosId = null;
           },
         });
-    }
-
-    if (!this.getTerceroIdFromContext()) {
-      await this.resolveTerceroIdFromDocumento(false);
     }
   }
 
@@ -166,7 +170,7 @@ export class RegistroEstudianteComponent implements OnInit {
         tratamiento_datos_aceptado: boolean;
       } = {
         tercero_id: terceroId,
-        proyecto_curricular_id: Number(this.pcId || 0),
+        proyecto_curricular_id: this.pcOikosId ?? Number(this.pcId || 0),
         resumen: this.form.value.resumen?.trim(),
         habilidades: this.form.value.habilidades?.trim(),
         cv_documento_id: '',
@@ -273,4 +277,5 @@ export class RegistroEstudianteComponent implements OnInit {
       return null;
     }
   }
+
 }

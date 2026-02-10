@@ -1,21 +1,232 @@
-.mat-card {
-  margin: 16px;
+$page-radius: 18px;
+$shadow: 0 18px 60px rgba(15, 33, 69, 0.12);
+
+.page-shell {
+  min-height: 100vh;
+  padding: 36px 16px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.page-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(21, 101, 192, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(16, 185, 129, 0.10), transparent 55%),
+    radial-gradient(circle at 20% 20%, #f7fbff 0, #eef3ff 35%, #f8f9fb 100%);
+  z-index: 0;
+}
+
+.page-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1100px;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 33, 69, 0.14);
+  box-shadow: $shadow;
+  overflow: hidden;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(15, 33, 69, 0.08);
+  background: linear-gradient(180deg, rgba(21, 101, 192, 0.08), transparent);
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.page-body {
+  padding: 18px;
 }
 
 .ofertas-grid {
   display: grid;
   gap: 16px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .ofertas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .ofertas-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .oferta-card {
-  margin: 0;
+  border-radius: $page-radius;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.clickable-card {
   cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.clickable-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(21, 101, 192, 0.3);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.clickable-card:focus,
+.clickable-card:focus-visible {
+  outline: 2px solid rgba(21, 101, 192, 0.45);
+  outline-offset: 3px;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.estado-chip {
+  background: rgba(59, 130, 246, 0.12) !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  font-weight: 700;
+}
+
+.card-meta {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dot {
+  opacity: 0.6;
 }
 
 .descripcion {
-  margin: 0 0 8px;
+  margin: 10px 0 12px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-round {
+  border-radius: 12px;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.9);
+  text-align: center;
+}
+
+.empty-title {
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .muted {
-  color: #6b7280;
+  color: #64748b;
+}
+
+.pager {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.error-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(254, 242, 242, 0.9);
+  color: #b91c1c;
+  margin-bottom: 12px;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    padding: 20px 12px;
+  }
+
+  .page-card {
+    border-radius: 14px;
+  }
+
+  .page-body {
+    padding: 12px;
+  }
+
+  .card-actions {
+    justify-content: flex-start;
+  }
 }

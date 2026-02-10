@@ -214,11 +214,11 @@
               </div>
 
               <!-- Estado como chip -->
-              <div class="chip-row chip-row-tight" *ngIf="inv?.estado">
-                <mat-chip class="chip chip-estado" [ngClass]="'st-' + (inv?.estado_raw || inv?.estado || '').toLowerCase()">
-                  {{ inv.estado }}
-                </mat-chip>
-              </div>
+                <div class="chip-row chip-row-tight" *ngIf="inv?.estado || inv?.estado_det">
+                  <mat-chip class="chip chip-estado" [ngClass]="'st-' + (inv?.estado_raw || inv?.estado || '').toLowerCase()">
+                    {{ getInvitacionEstadoNombre(inv) }}
+                  </mat-chip>
+                </div>
 
               <!-- Fecha -->
               <div class="muted" *ngIf="inv?.fecha">

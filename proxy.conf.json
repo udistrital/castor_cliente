@@ -1,0 +1,8 @@
+{
+  "/apioas": {
+    "target": "https://autenticacion.portaloas.udistrital.edu.co",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
